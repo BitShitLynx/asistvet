@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import type { Usuario } from './supabaseClient';
 import { TEMAS } from './styles/theme';
@@ -19,7 +19,58 @@ import SeccionGastos         from './pages/Gastos';
 import SeccionReportes       from './pages/Reportes';
 import SeccionUsuarios       from './pages/Usuarios';
 import AdminLynx             from './pages/AdminLynx';
-import { ToastProvider }     from './components/toast';
+import { ToastProvider, useToast } from './components/toast';
+
+// ── Pantalla cambio de contraseña (recovery link) ─────────────────────────────
+const PantallaRecuperacion = ({ onDone }: { onDone: () => void }) => {
+  const { toast } = useToast();
+  const [nuevaPassword, setNuevaPassword]     = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [saving, setSaving]                   = useState(false);
+
+  const handleCambiar = async () => {
+    if (nuevaPassword.length < 6) { toast('La contraseña debe tener al menos 6 caracteres', 'warning'); return; }
+    if (nuevaPassword !== confirmPassword) { toast('Las contraseñas no coinciden', 'warning'); return; }
+    setSaving(true);
+    const { error } = await supabase.auth.updateUser({ password: nuevaPassword });
+    if (error) { toast('Error: ' + error.message, 'error'); setSaving(false); return; }
+    await supabase.auth.signOut();
+    window.location.hash = '';
+    toast('Contraseña actualizada. Ingresá con tu nueva contraseña.', 'success');
+    setSaving(false);
+    onDone();
+  };
+
+  const inputStyle: React.CSSProperties = { background: '#0f0f0f', color: '#c8c8c8', border: '1px solid #2a2a2a', borderRadius: '6px', padding: '10px 12px', width: '100%', boxSizing: 'border-box', fontSize: '14px' };
+  const labelStyle: React.CSSProperties = { fontSize: '11px', color: '#444', marginBottom: '6px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.08em' };
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: '380px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <img src={VALVET_LOGO} alt="ValVet" style={{ width: '200px', objectFit: 'contain', filter: 'invert(1) brightness(0.88)', display: 'inline-block' }} />
+        </div>
+        <div style={{ background: '#141414', border: '1px solid #222', borderRadius: '10px', padding: '32px 28px' }}>
+          <p style={{ margin: '0 0 4px', fontSize: '11px', color: '#555', letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>Nueva contraseña</p>
+          <h2 style={{ margin: '0 0 24px', fontSize: '18px', fontWeight: '600', color: '#d0d0d0' }}>Restablecer contraseña</h2>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={labelStyle}>Nueva contraseña</label>
+            <input type="password" value={nuevaPassword} onChange={e => setNuevaPassword(e.target.value)} style={inputStyle} placeholder="Mín. 6 caracteres" />
+          </div>
+          <div style={{ marginBottom: '24px' }}>
+            <label style={labelStyle}>Confirmar contraseña</label>
+            <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleCambiar()} style={inputStyle} placeholder="Repetir contraseña" />
+          </div>
+          <button onClick={handleCambiar} disabled={saving}
+            style={{ width: '100%', padding: '13px', background: saving ? '#1a2a1a' : '#2d5a2d', color: '#7ab87a', border: '1px solid #3a6e3a', borderRadius: '6px', fontWeight: '500', cursor: saving ? 'default' : 'pointer', fontSize: '13px', letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>
+            {saving ? 'Guardando...' : 'Guardar contraseña'}
+          </button>
+        </div>
+        <p style={{ textAlign: 'center', marginTop: '28px', fontSize: '11px', color: '#2a2a2a', letterSpacing: '0.06em' }}>powered by Lynx</p>
+      </div>
+    </div>
+  );
+};
 
 const App = () => {
   const [usuario, setUsuario]           = useState<Usuario | null>(null);
@@ -30,10 +81,17 @@ const App = () => {
   );
   const [stockAlertas, setStockAlertas] = useState<{nombre: string; stock: number; unidad: string}[]>([]);
   const [mostrarAlertaStock, setMostrarAlertaStock] = useState(false);
+  const [modoRecuperacion, setModoRecuperacion] = useState(false);
 
   const tema = TEMAS[temaKey];
 
   useEffect(() => {
+    // Detectar si viene de un link de recuperación de contraseña
+    const hash = window.location.hash;
+    if (hash && hash.includes('type=recovery')) {
+      setModoRecuperacion(true);
+    }
+
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         const { data } = await supabase.from('usuarios').select('*').eq('id', session.user.id).single();
@@ -113,7 +171,8 @@ const App = () => {
 
   return (
     <ToastProvider>
-    {mostrarAlertaStock && (
+    {modoRecuperacion && <PantallaRecuperacion onDone={() => setModoRecuperacion(false)} />}
+    {!modoRecuperacion && mostrarAlertaStock && (
       <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
         <div style={{ background: '#141414', border: '1px solid #5a3a00', borderRadius: '10px', padding: '28px', maxWidth: '420px', width: '100%' }}>
           <p style={{ margin: '0 0 4px', fontSize: '11px', color: '#8a6a00', letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>Atención</p>
@@ -143,7 +202,7 @@ const App = () => {
         </div>
       </div>
     )}
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: tema.bg, color: tema.text, fontFamily: "'Inter', system-ui, sans-serif" }}>
+    {!modoRecuperacion && <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: tema.bg, color: tema.text, fontFamily: "'Inter', system-ui, sans-serif" }}>
 
       {/* SIDEBAR */}
       <aside style={{ width: '220px', background: '#0f0f0f', padding: '24px 16px', borderRight: '1px solid #1e1e1e', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
@@ -237,7 +296,7 @@ const App = () => {
           {vista === 'admin_lynx'     && <AdminLynx             usuario={usuario} tema={tema} />}
         </main>
       </div>
-    </div>
+    </div>}
     </ToastProvider>
   );
 };
