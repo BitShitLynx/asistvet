@@ -38,7 +38,7 @@ export const makeS = (t: TemaObj) => ({
   label:      { fontSize: '11px', color: t.textLabel, marginBottom: '6px', display: 'block', textTransform: 'uppercase' as const, letterSpacing: '0.08em', fontWeight: '500' } as React.CSSProperties,
   card:       { background: t.bgCard, borderRadius: '10px', border: `1px solid ${t.border}`, padding: '22px 24px' } as React.CSSProperties,
   btnPrimary: { padding: '10px 20px', background: '#2d5a2d', color: '#a8d4a8', border: '1px solid #3a6e3a', borderRadius: '6px', fontWeight: '500', cursor: 'pointer', fontSize: '14px', letterSpacing: '0.03em' } as React.CSSProperties,
-  btnSuccess: { padding: '10px 20px', background: '#1a3a1a', color: '#7ab87a', border: '1px solid #2d5a2d', borderRadius: '6px', fontWeight: '500', cursor: 'pointer', fontSize: '14px', letterSpacing: '0.03em' } as React.CSSProperties,
+  btnSuccess: { padding: '10px 20px', background: '#1a3a1a', color: '#ffffff', border: '1px solid #2d5a2d', borderRadius: '6px', fontWeight: '500', cursor: 'pointer', fontSize: '14px', letterSpacing: '0.03em' } as React.CSSProperties,
   btnGhost:   { padding: '10px 20px', background: 'transparent', color: t.textMuted, border: `1px solid ${t.border}`, borderRadius: '6px', cursor: 'pointer', fontSize: '14px' } as React.CSSProperties,
   btnDanger:  { padding: '6px 12px', background: 'transparent', color: '#c0504a', border: '1px solid #c0504a', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' } as React.CSSProperties,
 });

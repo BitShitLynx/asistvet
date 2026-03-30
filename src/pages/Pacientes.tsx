@@ -313,7 +313,7 @@ const SeccionPacientes = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj }
       </div>
       {internados.length > 0 && (
         <div style={{ ...S.card, border: '1px solid #d97706' }}>
-          <h4 style={{ margin: '0 0 12px', color: '#fbbf24' }}>🏥 Internados actualmente ({internados.length})</h4>
+          <h4 style={{ margin: '0 0 12px', color: '#fbbf24' }}>Internados actualmente ({internados.length})</h4>
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             {internados.map(p => (
               <div key={p.id} onClick={() => setFichaAbierta(p)} style={{ background: tema.bgInput, padding: '10px 16px', borderRadius: '8px', border: '1px solid #d97706', cursor: 'pointer' }} onMouseEnter={e => (e.currentTarget.style.background = tema.rowHover)} onMouseLeave={e => (e.currentTarget.style.background = tema.bgInput)}>
@@ -341,7 +341,7 @@ const SeccionPacientes = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj }
                   <td style={{ padding: '12px 15px', color: tema.textMuted, fontSize: '13px' }}>{formatFecha(p.fecha_registro)}</td>
                   <td style={{ padding: '12px 15px' }}>
                     <div style={{ display: 'flex', gap: '6px' }}>
-                      <button onClick={() => setFichaAbierta(p)} style={{ padding: '5px 12px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>📋 Ficha</button>
+                      <button onClick={() => setFichaAbierta(p)} style={{ padding: '5px 12px', background: tema.accent, color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>📋 Ficha</button>
                       <button onClick={() => setPacienteEditar(p)} style={S.btnDanger}>✏️</button>
                     </div>
                   </td>
