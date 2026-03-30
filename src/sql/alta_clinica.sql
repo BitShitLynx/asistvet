@@ -31,3 +31,15 @@ values (
 
 -- PASO 5: Para agregar más usuarios a la misma clínica
 -- repetir pasos 3 y 4 con rol veterinario o recepcionista
+
+-- PASO 6: Cargar catálogo inicial de productos para la nueva clínica
+-- Reemplazar UUID_CLINICA por el ID real de la clínica creada
+
+insert into productos (clinica_id, nombre, categoria, especie, dosis, vias, stock_actual, unidad)
+select
+  'UUID_CLINICA',
+  nombre, categoria, especie, dosis, vias,
+  0 as stock_actual,  -- stock en 0 para clínica nueva
+  unidad
+from productos
+where clinica_id = 'aaaaaaaa-0000-0000-0000-000000000001';

@@ -74,7 +74,9 @@ const PantallaRecuperacion = ({ onDone }: { onDone: () => void }) => {
 
 const App = () => {
   const [usuario, setUsuario]           = useState<Usuario | null>(null);
-  const [vista, setVista]               = useState('inicio');
+  const [vista, setVista]               = useState<string>(
+    () => localStorage.getItem('valvet-vista') || 'inicio'
+  );
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [temaKey, setTemaKey]           = useState<Tema>(
     () => (localStorage.getItem('valvet-tema') as Tema) || 'dark'
@@ -122,7 +124,9 @@ const App = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const logout = async () => { await supabase.auth.signOut(); setUsuario(null); };
+  const navegarA = (v: string) => { localStorage.setItem('valvet-vista', v); setVista(v); };
+
+  const logout = async () => { await supabase.auth.signOut(); localStorage.removeItem('valvet-vista'); setUsuario(null); setVista('inicio'); };
 
   if (checkingAuth) return (
     <div style={{ minHeight: '100vh', background: TEMAS.dark.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -130,7 +134,7 @@ const App = () => {
     </div>
   );
 
-  if (!usuario) return <PantallaLogin onLogin={u => { setUsuario(u); setVista('inicio'); }} />;
+  if (!usuario) return <PantallaLogin onLogin={u => { setUsuario(u); navegarA('inicio'); }} />;
 
   const ROL_BADGE: Record<string, { bg: string; color: string; border: string }> = {
     admin:         { bg: '#1a2a1a', color: '#5a9e5a', border: '#2d5a2d' },
@@ -190,9 +194,10 @@ const App = () => {
             ))}
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
-            <button onClick={() => { setMostrarAlertaStock(false); setVista('stock'); }}
+            <button onClick={() => { setMostrarAlertaStock(false); navegarA('stock'); }}
               style={{ flex: 1, padding: '11px', background: '#1a2a1a', border: '1px solid #2d5a2d', borderRadius: '6px', color: '#5a9e5a', cursor: 'pointer', fontSize: '13px', fontWeight: '500', letterSpacing: '0.04em' }}>
               Ver inventario
+
             </button>
             <button onClick={() => setMostrarAlertaStock(false)}
               style={{ padding: '11px 20px', background: 'transparent', border: '1px solid #2a2a2a', borderRadius: '6px', color: '#555', cursor: 'pointer', fontSize: '13px' }}>
@@ -228,7 +233,7 @@ const App = () => {
             <div key={grupo.label} style={{ marginBottom: '20px' }}>
               <div style={{ fontSize: '11px', color: '#555', letterSpacing: '0.12em', textTransform: 'uppercase' as const, padding: '0 12px', marginBottom: '8px', fontWeight: '500' }}>{grupo.label}</div>
               {grupo.items.map(({ key, label }) => (
-                <button key={key} onClick={() => setVista(key)}
+                <button key={key} onClick={() => navegarA(key)}
                   style={{ width: '100%', padding: '10px 12px', border: 'none', borderRadius: '5px', textAlign: 'left', cursor: 'pointer', fontSize: '14px', letterSpacing: '0.02em', marginBottom: '1px', background: vista === key ? '#1a2a1a' : 'transparent', color: vista === key ? '#5a9e5a' : '#555', borderLeft: vista === key ? '2px solid #5a9e5a' : '2px solid transparent', fontWeight: vista === key ? '500' : '400' }}
                   onMouseEnter={e => { if (vista !== key) { (e.currentTarget as HTMLButtonElement).style.background = '#181818'; (e.currentTarget as HTMLButtonElement).style.color = '#888'; } }}
                   onMouseLeave={e => { if (vista !== key) { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#555'; } }}
@@ -264,7 +269,7 @@ const App = () => {
                 {i > 0 && <span style={{ color: tema.textMuted, fontSize: '12px' }}>›</span>}
                 <span
                   style={{ color: i === breadcrumb.length - 1 ? tema.text : tema.textMuted, cursor: i === 0 && vista !== 'inicio' ? 'pointer' : 'default', fontWeight: i === breadcrumb.length - 1 ? '500' : '400', letterSpacing: '0.02em' }}
-                  onClick={() => i === 0 && vista !== 'inicio' && setVista('inicio')}
+                  onClick={() => i === 0 && vista !== 'inicio' && navegarA('inicio')}
                 >{b}</span>
               </span>
             ))}
@@ -281,7 +286,7 @@ const App = () => {
 
         {/* CONTENIDO */}
         <main style={{ flex: 1, padding: '32px', overflowY: 'auto' }}>
-          {vista === 'inicio'         && <PantallaInicio        usuario={usuario} onNavegar={setVista} tema={tema} />}
+          {vista === 'inicio'         && <PantallaInicio        usuario={usuario} onNavegar={navegarA} tema={tema} />}
           {vista === 'turnos'         && <SeccionTurnos         usuario={usuario} tema={tema} />}
           {vista === 'pacientes'      && <SeccionPacientes      usuario={usuario} tema={tema} />}
           {vista === 'propietarios'   && <SeccionPropietarios   usuario={usuario} tema={tema} />}
