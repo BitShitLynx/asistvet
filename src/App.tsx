@@ -101,7 +101,7 @@ const App = () => {
         { key: 'gastos',      label: 'Gastos' },
         { key: 'reportes',    label: 'Reportes' },
         { key: 'usuarios',    label: 'Usuarios' },
-        ...(usuario.email === 'prueba@prueba.com' ? [{ key: 'admin_lynx', label: 'Admin Lynx' }] : []),
+        ...(usuario.email === 'marianonicolasmontano@gmail.com' ? [{ key: 'admin_lynx', label: 'Admin Lynx' }] : []),
       ],
     },
   ];

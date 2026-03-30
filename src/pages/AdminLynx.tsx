@@ -5,7 +5,7 @@ import { makeS } from '../styles/theme';
 import type { TemaObj } from '../styles/theme';
 import { useToast } from '../components/toast';
 
-const ADMIN_EMAIL = 'prueba@prueba.com'; // reemplazar con tu email real
+const ADMIN_EMAIL = 'marianonicolasmontano@gmail.com'; // reemplazar con tu email real
 
 interface Clinica {
   id: string; nombre: string; email?: string;
