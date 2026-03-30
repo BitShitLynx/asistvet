@@ -6,8 +6,6 @@ import type { TemaObj } from '../styles/theme';
 import { Modal } from '../components/shared';
 import { useToast } from '../components/toast';
 
-interface CatalogItem { id: string; nombre: string; stock: number; unidad: string; }
-
 interface CirugiaItem { producto_nombre: string; cantidad: string; unidad: string; observaciones: string; }
 interface Cirugia {
   id: string; paciente_id?: string; veterinario_id?: string; tipo: string;
@@ -45,7 +43,7 @@ const FormCirugia = ({ clinicaId, usuario, cirugia, onSave, onClose, tema }: {
   const esEdicion = !!cirugia;
   const [pacientes, setPacientes] = useState<any[]>([]);
   const [vets, setVets] = useState<any[]>([]);
-  const [catalogo, setCatalogo] = useState<CatalogItem[]>([]);
+  const [catalogo, setCatalogo] = useState<any[]>([]);
   const [form, setForm] = useState({
     paciente_id:    cirugia?.paciente_id    || '',
     veterinario_id: cirugia?.veterinario_id || usuario.id,
@@ -71,14 +69,11 @@ const FormCirugia = ({ clinicaId, usuario, cirugia, onSave, onClose, tema }: {
     Promise.all([
       supabase.from('pacientes').select('id,nombre,especie,raza').eq('clinica_id', clinicaId).order('nombre'),
       supabase.from('usuarios').select('id,nombre,rol').eq('clinica_id', clinicaId),
-      supabase.from('productos').select('id,nombre,stock_actual,unidad').eq('clinica_id', clinicaId).order('nombre'),
+      supabase.from('productos').select('id,nombre,stock_actual,unidad').eq('clinica_id', clinicaId).eq('activo', true).order('nombre'),
     ]).then(([p, v, prod]) => {
       setPacientes(p.data || []);
       setVets(v.data || []);
-      setCatalogo((prod.data || []).map((x: any) => ({
-        id: x.id, nombre: x.nombre,
-        stock: Number(x.stock_actual ?? 0), unidad: x.unidad || 'unidad',
-      })));
+      setCatalogo(prod.data || []);
     });
   }, [clinicaId]);
 
@@ -210,7 +205,7 @@ const FormCirugia = ({ clinicaId, usuario, cirugia, onSave, onClose, tema }: {
                   onMouseEnter={e => (e.currentTarget.style.background = tema.rowHover)}
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                   <span style={{ color: tema.text, fontSize: '13px' }}>{p.nombre}</span>
-                  <span style={{ color: tema.textMuted, fontSize: '12px' }}>{p.stock} {p.unidad}</span>
+                  <span style={{ color: tema.textMuted, fontSize: '12px' }}>{p.stock_actual} {p.unidad}</span>
                 </div>
               ))}
               {sugMeds.length === 0 && (
@@ -333,7 +328,7 @@ const SeccionCirugias = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj })
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead style={{ background: tema.bgInput }}>
               <tr>{['Fecha', 'Paciente', 'Tipo', 'Veterinario', 'Duración', 'Costo', 'Estado', 'Acciones'].map(h =>
-                <th key={h} style={{ padding: '11px 14px', textAlign: 'left', color: '#22c55e', fontSize: '13px' }}>{h}</th>
+                <th key={h} style={{ padding: '11px 14px', textAlign: 'left', color: tema.accent, fontSize: '13px' }}>{h}</th>
               )}</tr>
             </thead>
             <tbody>

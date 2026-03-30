@@ -141,7 +141,7 @@ const SeccionFacturacion = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj
       </div>
 
       {/* Resumen del período */}
-      <div style={{ ...S.card, border: '1px solid #334155' }}>
+      <div style={{ ...S.card, border: `1px solid ${tema.border}` }}>
         <h4 style={{ margin: '0 0 14px', color: tema.text }}>📊 Resumen del período</h4>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px' }}>
           <div style={{ background: tema.bgInput, padding: '12px', borderRadius: '8px' }}>
