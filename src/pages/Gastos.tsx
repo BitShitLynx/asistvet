@@ -208,7 +208,7 @@ const SeccionGastos = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj }) =
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead style={{ background: tema.bgInput }}>
               <tr>{['Fecha', 'Categoría', 'Descripción', 'Comprobante', 'Medio', 'Monto', 'Acciones'].map(h =>
-                <th key={h} style={{ padding: '11px 14px', textAlign: 'left', color: '#22c55e', fontSize: '12px' }}>{h}</th>
+                <th key={h} style={{ padding: '11px 14px', textAlign: 'left', color: '#22c55e', fontSize: '13px' }}>{h}</th>
               )}</tr>
             </thead>
             <tbody>
@@ -228,7 +228,7 @@ const SeccionGastos = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj }) =
                       </span>
                     </td>
                     <td style={{ padding: '12px 14px', fontSize: '13px', color: tema.text }}>{g.descripcion}</td>
-                    <td style={{ padding: '12px 14px', fontSize: '12px', color: tema.textMuted }}>{g.comprobante || '—'}</td>
+                    <td style={{ padding: '12px 14px', fontSize: '13px', color: tema.textMuted }}>{g.comprobante || '—'}</td>
                     <td style={{ padding: '12px 14px' }}>
                       <span style={{ fontSize: '11px', background: g.medio_pago === 'efectivo' ? 'rgba(21,128,61,0.15)' : 'rgba(8,145,178,0.15)', color: g.medio_pago === 'efectivo' ? '#22c55e' : '#38bdf8', padding: '2px 8px', borderRadius: '99px' }}>
                         {g.medio_pago === 'efectivo' ? '💵' : '📱'} {g.medio_pago === 'efectivo' ? 'Efectivo' : 'Transf.'}

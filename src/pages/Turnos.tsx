@@ -101,9 +101,9 @@ const SeccionTurnos = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj }) =
           style={{ ...S.input, width: 'auto', padding: '10px 14px', colorScheme: 'dark' }} />
         <button onClick={() => setFechaSel(hoy())} style={{ ...S.btnGhost, padding: '10px 16px', fontSize: '13px' }}>Hoy</button>
         <button onClick={() => { setTurnoAccion(null); setModalNuevo(true); }}
-          style={{ ...S.btnSuccess, whiteSpace: 'nowrap' }}>+ Nuevo turno</button>
+          style={{ ...S.btnPrimary, whiteSpace: 'nowrap' }}>+ Nuevo turno</button>
         <button onClick={() => { setTurnoAccion(null); setModalNuevo(true); }}
-          style={{ ...S.btnGhost, whiteSpace: 'nowrap', borderColor: '#d97706', color: '#fbbf24' }}>🚨 Guardia sin turno</button>
+          style={{ ...S.btnGhost, whiteSpace: 'nowrap' }}>🚨 Guardia sin turno</button>
         {esAdmin && (
           <button onClick={() => setModalPrecio(true)}
             style={{ ...S.btnGhost, marginLeft: 'auto', fontSize: '13px' }}>⚙️ Precios</button>
@@ -119,7 +119,7 @@ const SeccionTurnos = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj }) =
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead style={{ background: tema.bgInput }}>
               <tr>{['Hora', 'Paciente', 'Tipo', 'Veterinario', 'Estado', 'Acciones'].map(h =>
-                <th key={h} style={{ padding: '11px 15px', textAlign: 'left', color: '#3b82f6', fontSize: '12px' }}>{h}</th>
+                <th key={h} style={{ padding: '11px 15px', textAlign: 'left', color: tema.accent, fontSize: '13px' }}>{h}</th>
               )}</tr>
             </thead>
             <tbody>

@@ -328,7 +328,7 @@ const SeccionPacientes = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj }
         {loading ? <p style={{ padding: '20px', color: tema.textMuted }}>Cargando pacientes...</p> : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead style={{ background: tema.bgInput }}>
-              <tr>{['Paciente', 'Especie / Raza', 'Propietario', 'Estado', 'Registro', 'Acciones'].map(h => <th key={h} style={{ padding: '12px 15px', textAlign: 'left', color: '#3b82f6', fontSize: '12px' }}>{h}</th>)}</tr>
+              <tr>{['Paciente', 'Especie / Raza', 'Propietario', 'Estado', 'Registro', 'Acciones'].map(h => <th key={h} style={{ padding: '12px 15px', textAlign: 'left', color: tema.accent, fontSize: '12px' }}>{h}</th>)}</tr>
             </thead>
             <tbody>
               {filtrados.length === 0 && <tr><td colSpan={6} style={{ padding: '20px', color: tema.textMuted, textAlign: 'center' }}>No se encontraron pacientes.</td></tr>}
@@ -336,7 +336,7 @@ const SeccionPacientes = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj }
                 <tr key={p.id} style={{ borderBottom: `1px solid ${tema.border}` }} onMouseEnter={e => (e.currentTarget.style.background = tema.rowHover)} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                   <td style={{ padding: '12px 15px', fontWeight: 'bold', cursor: 'pointer', color: tema.text }} onClick={() => setFichaAbierta(p)}>{p.nombre}</td>
                   <td style={{ padding: '12px 15px', color: tema.textMuted, fontSize: '13px' }}>{p.especie}{p.raza ? ` · ${p.raza}` : ''}</td>
-                  <td style={{ padding: '12px 15px', fontSize: '13px', color: tema.text }}>{p.propietarios?.nombre || <span style={{ color: '#475569' }}>—</span>}{p.propietarios?.telefono && <span style={{ color: tema.textMuted, fontSize: '12px', display: 'block' }}>{p.propietarios.telefono}</span>}</td>
+                  <td style={{ padding: '12px 15px', fontSize: '13px', color: tema.text }}>{p.propietarios?.nombre || <span style={{ color: '#475569' }}>—</span>}{p.propietarios?.telefono && <span style={{ color: tema.textMuted, fontSize: '13px', display: 'block' }}>{p.propietarios.telefono}</span>}</td>
                   <td style={{ padding: '12px 15px' }}><BadgeEstado estado={p.estado} /></td>
                   <td style={{ padding: '12px 15px', color: tema.textMuted, fontSize: '13px' }}>{formatFecha(p.fecha_registro)}</td>
                   <td style={{ padding: '12px 15px' }}>

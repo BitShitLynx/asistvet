@@ -333,7 +333,7 @@ const SeccionCirugias = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj })
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead style={{ background: tema.bgInput }}>
               <tr>{['Fecha', 'Paciente', 'Tipo', 'Veterinario', 'Duración', 'Costo', 'Estado', 'Acciones'].map(h =>
-                <th key={h} style={{ padding: '11px 14px', textAlign: 'left', color: '#22c55e', fontSize: '12px' }}>{h}</th>
+                <th key={h} style={{ padding: '11px 14px', textAlign: 'left', color: '#22c55e', fontSize: '13px' }}>{h}</th>
               )}</tr>
             </thead>
             <tbody>

@@ -1,3 +1,4 @@
+import React from 'react';
 import type { Usuario } from '../supabaseClient';
 import { makeS } from '../styles/theme';
 import type { TemaObj } from '../styles/theme';
@@ -8,56 +9,52 @@ const PantallaInicio = ({ usuario, onNavegar, tema }: { usuario: Usuario; onNave
   const saludo = hora < 12 ? 'Buenos días' : hora < 19 ? 'Buenas tardes' : 'Buenas noches';
 
   const modulos = [
-    { key: 'turnos',         icon: '📅', label: 'Turnos',         desc: 'Agenda del día, guardias y estados',         color: '#0891b2' },
-    { key: 'pacientes',      icon: '🐕', label: 'Pacientes',      desc: 'Fichas, historial clínico e internaciones',   color: '#22c55e' },
-    { key: 'propietarios',   icon: '👤', label: 'Propietarios',   desc: 'Clientes, contactos y cobros',                color: '#22c55e' },
-    { key: 'intervenciones', icon: '💉', label: 'Intervenciones', desc: 'Aplicar drogas y vacunas desde el stock',     color: '#22c55e' },
-    { key: 'cirugias',       icon: '🔪', label: 'Cirugías',       desc: 'Registro y seguimiento quirúrgico',           color: '#d97706' },
-    { key: 'recetas',        icon: '📋', label: 'Recetas',        desc: 'Prescripciones e impresión',                  color: '#22c55e' },
-    { key: 'stock',          icon: '📦', label: 'Inventario',     desc: 'Stock de drogas, vacunas e insumos',          color: '#22c55e' },
-    { key: 'facturacion',    icon: '💰', label: 'Facturación',    desc: 'Cobros y medios de pago',                     color: '#15803d' },
-    { key: 'gastos',         icon: '📉', label: 'Gastos',         desc: 'Registro de egresos por categoría',           color: '#f87171' },
-    { key: 'reportes',       icon: '📊', label: 'Reportes',       desc: 'Balance, métricas y alertas de stock',        color: '#a78bfa' },
-    { key: 'usuarios',       icon: '⚙️', label: 'Usuarios',       desc: 'Gestión de accesos y roles',                  color: '#6daa7f' },
+    { key: 'turnos',         label: 'Turnos',         desc: 'Agenda y guardias' },
+    { key: 'pacientes',      label: 'Pacientes',      desc: 'Fichas e historial' },
+    { key: 'propietarios',   label: 'Propietarios',   desc: 'Clientes y contactos' },
+    { key: 'intervenciones', label: 'Intervenciones', desc: 'Aplicación de drogas' },
+    { key: 'cirugias',       label: 'Cirugías',       desc: 'Registro quirúrgico' },
+    { key: 'recetas',        label: 'Recetas',         desc: 'Prescripciones' },
+    { key: 'stock',          label: 'Inventario',     desc: 'Stock e insumos' },
+    { key: 'facturacion',    label: 'Facturación',    desc: 'Cobros y pagos' },
+    { key: 'gastos',         label: 'Gastos',         desc: 'Egresos operativos' },
+    { key: 'reportes',       label: 'Reportes',       desc: 'Métricas y balance' },
+    { key: 'usuarios',       label: 'Usuarios',       desc: 'Accesos y roles' },
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
 
       {/* Banner */}
-      <div style={{ ...S.card, background: 'linear-gradient(135deg,#0a2e14,#112918)', border: '1px solid #1e4a2a', textAlign: 'center', padding: '32px 24px' }}>
-        <span style={{ fontSize: '44px', display: 'block', marginBottom: '12px' }}>🩺</span>
-        <h2 style={{ margin: '0 0 8px', color: '#e8f5eb', fontSize: '24px', textAlign: 'center' }}>
-          {saludo}, {usuario.nombre}
-        </h2>
-        <p style={{ margin: 0, color: '#6daa7f', fontSize: '14px', textAlign: 'center' }}>
-          <strong style={{ color: '#22c55e' }}>ValVet</strong> —{' '}
+      <div style={{ ...S.card, borderLeft: '2px solid #3a6e3a', borderRadius: '8px' }}>
+        <p style={{ margin: '0 0 4px', fontSize: '11px', color: tema.textMuted, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{saludo}</p>
+        <h2 style={{ margin: '0 0 6px', color: tema.text, fontSize: '22px', fontWeight: '600', letterSpacing: '0.01em' }}>{usuario.nombre}</h2>
+        <p style={{ margin: 0, fontSize: '13px', color: tema.textMuted, letterSpacing: '0.02em' }}>
           {new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
         </p>
       </div>
 
-      {/* Grilla de módulos */}
+      {/* Grilla */}
       <div>
-        <h3 style={{ margin: '0 0 16px', color: tema.textMuted, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'center' }}>
+        <p style={{ margin: '0 0 16px', fontSize: '10px', color: tema.textMuted, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: '500' }}>
           Módulos disponibles
-        </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
           {modulos.map(m => (
             <div key={m.key} onClick={() => onNavegar(m.key)}
-              style={{ ...S.card, cursor: 'pointer', transition: 'transform 0.15s, border-color 0.15s', textAlign: 'center', padding: '18px 14px' }}
+              style={{ ...S.card, cursor: 'pointer', padding: '20px', transition: 'border-color 0.15s, background 0.15s' }}
               onMouseEnter={e => {
-                (e.currentTarget as HTMLDivElement).style.borderColor = m.color;
-                (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-3px)';
+                (e.currentTarget as HTMLDivElement).style.borderColor = tema.accent;
+                (e.currentTarget as HTMLDivElement).style.background = tema.rowHover;
               }}
               onMouseLeave={e => {
                 (e.currentTarget as HTMLDivElement).style.borderColor = tema.border;
-                (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
+                (e.currentTarget as HTMLDivElement).style.background = tema.bgCard;
               }}
             >
-              <div style={{ fontSize: '28px', marginBottom: '8px' }}>{m.icon}</div>
-              <h4 style={{ margin: '0 0 6px', color: tema.text, fontSize: '14px', textAlign: 'center' }}>{m.label}</h4>
-              <p style={{ margin: 0, color: tema.textMuted, fontSize: '12px', lineHeight: '1.4', textAlign: 'center' }}>{m.desc}</p>
-              <p style={{ margin: '10px 0 0', color: m.color, fontSize: '11px', fontWeight: 'bold', textAlign: 'center' }}>Abrir →</p>
+              <p style={{ margin: '0 0 6px', fontSize: '14px', fontWeight: '600', color: tema.text, letterSpacing: '0.01em' }}>{m.label}</p>
+              <p style={{ margin: '0 0 14px', fontSize: '12px', color: tema.textMuted, lineHeight: '1.4' }}>{m.desc}</p>
+              <p style={{ margin: 0, fontSize: '11px', color: '#4a7a4a', letterSpacing: '0.04em' }}>Abrir →</p>
             </div>
           ))}
         </div>

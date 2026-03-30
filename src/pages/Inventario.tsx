@@ -52,6 +52,9 @@ const SeccionInventario = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj 
       .select('*')
       .eq('clinica_id', usuario.clinica_id)
       .order('nombre');
+    console.log('Productos data:', data);
+    console.log('Productos error:', dbErr);
+    console.log('clinica_id usado:', usuario.clinica_id);
     if (dbErr) { console.error('Error cargando productos:', dbErr); setError(dbErr.message); setLoading(false); return; }
     setProductos((data || []).map(mapearProducto));
     setLoading(false);
@@ -337,7 +340,7 @@ const SeccionInventario = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj 
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead style={{ background: tema.bgInput }}>
               <tr>{['Insumo', 'Categoría', 'Especie', 'Stock', 'Acciones'].map(h =>
-                <th key={h} style={{ padding: '12px 15px', textAlign: 'left', color: tema.accent, fontSize: '12px' }}>{h}</th>
+                <th key={h} style={{ padding: '12px 15px', textAlign: 'left', color: tema.accent, fontSize: '13px' }}>{h}</th>
               )}</tr>
             </thead>
             <tbody>

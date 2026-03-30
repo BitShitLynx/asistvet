@@ -101,7 +101,7 @@ const SeccionFacturacion = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead style={{ background: tema.bgInput }}>
               <tr>{['Recibo', 'Fecha', 'Paciente', 'Tipo', 'Monto', 'Cobrado', 'Medio', 'Estado'].map(h =>
-                <th key={h} style={{ padding: '11px 14px', textAlign: 'left', color: '#3b82f6', fontSize: '12px' }}>{h}</th>
+                <th key={h} style={{ padding: '11px 14px', textAlign: 'left', color: tema.accent, fontSize: '13px' }}>{h}</th>
               )}</tr>
             </thead>
             <tbody>
@@ -115,8 +115,8 @@ const SeccionFacturacion = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj
                   <tr key={c.id} style={{ borderBottom: `1px solid ${tema.border}` }}
                     onMouseEnter={e => (e.currentTarget.style.background = tema.rowHover)}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                    <td style={{ padding: '12px 14px', fontSize: '12px', color: '#34d399', fontWeight: 'bold' }}>{c.numero_recibo || '—'}</td>
-                    <td style={{ padding: '12px 14px', fontSize: '12px', color: tema.textMuted }}>{fmtFecha(c.fecha_cobro)}</td>
+                    <td style={{ padding: '12px 14px', fontSize: '13px', color: '#34d399', fontWeight: 'bold' }}>{c.numero_recibo || '—'}</td>
+                    <td style={{ padding: '12px 14px', fontSize: '13px', color: tema.textMuted }}>{fmtFecha(c.fecha_cobro)}</td>
                     <td style={{ padding: '12px 14px' }}>
                       <p style={{ margin: 0, fontWeight: 'bold', color: tema.text, fontSize: '13px' }}>{c.pacientes?.nombre || '—'}</p>
                       <p style={{ margin: '2px 0 0', fontSize: '11px', color: tema.textMuted }}>{c.pacientes?.especie}</p>

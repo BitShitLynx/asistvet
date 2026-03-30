@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { supabase } from '../supabaseClient';
 import type { Usuario } from '../supabaseClient';
 import { TEMAS, makeS } from '../styles/theme';
+import { VALVET_LOGO } from '../styles/theme';
 
 const PantallaLogin = ({ onLogin }: { onLogin: (u: Usuario) => void }) => {
   const [email, setEmail]       = useState('');
@@ -21,25 +22,49 @@ const PantallaLogin = ({ onLogin }: { onLogin: (u: Usuario) => void }) => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: TEMAS.dark.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ ...S.card, width: '400px', border: '1px solid #1e40af' }}>
-        <div style={{ textAlign: 'center', marginBottom: '8px' }}>
-          <span style={{ fontSize: '30px' }}>🐾</span>
-          <span style={{ fontSize: '26px', fontWeight: '900', background: 'linear-gradient(135deg,#3b82f6,#06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginLeft: '8px' }}>ValVet</span>
+    <div style={{ minHeight: '100vh', background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: '380px' }}>
+
+        {/* Logo */}
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <img src={VALVET_LOGO} alt="ValVet"
+            style={{ width: '260px', objectFit: 'contain', filter: 'invert(1) brightness(0.88)', display: 'inline-block', verticalAlign: 'bottom' }} />
+          <p style={{ margin: '14px 0 0', fontSize: '12px', color: '#666666', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Sistema de Gestión Veterinaria</p>
         </div>
-        <p style={{ color: TEMAS.dark.textMuted, textAlign: 'center', marginBottom: '30px', fontSize: '14px' }}>Sistema de Gestión Veterinaria</p>
-        {error && <div style={{ background: '#450a0a', border: '1px solid #dc2626', borderRadius: '8px', padding: '10px', color: '#f87171', marginBottom: '15px', fontSize: '14px' }}>{error}</div>}
-        <div style={{ marginBottom: '15px' }}>
-          <label style={S.label}>Email</label>
-          <input type="email" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleLogin()} style={S.input} placeholder="veterinario@clinica.com" />
+
+        {/* Card login */}
+        <div style={{ background: '#141414', border: '1px solid #222', borderRadius: '10px', padding: '32px 28px' }}>
+          {error && (
+            <div style={{ background: '#200a0a', border: '1px solid #5a2020', borderRadius: '6px', padding: '10px 14px', color: '#c07070', marginBottom: '20px', fontSize: '13px', letterSpacing: '0.02em' }}>
+              {error}
+            </div>
+          )}
+          <div style={{ marginBottom: '18px' }}>
+            <label style={S.label}>Email</label>
+            <input type="email" value={email}
+              onChange={e => setEmail(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleLogin()}
+              style={{ ...S.input, background: '#0f0f0f', border: '1px solid #2a2a2a', color: '#c8c8c8' }}
+              placeholder="usuario@clinica.com" />
+          </div>
+          <div style={{ marginBottom: '28px' }}>
+            <label style={S.label}>Contraseña</label>
+            <input type="password" value={password}
+              onChange={e => setPassword(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleLogin()}
+              style={{ ...S.input, background: '#0f0f0f', border: '1px solid #2a2a2a', color: '#c8c8c8' }}
+              placeholder="••••••••" />
+          </div>
+          <button onClick={handleLogin} disabled={loading}
+            style={{ width: '100%', padding: '13px', background: loading ? '#1a2a1a' : '#2d5a2d', color: '#7ab87a', border: '1px solid #3a6e3a', borderRadius: '6px', fontWeight: '500', cursor: loading ? 'default' : 'pointer', fontSize: '13px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+            {loading ? 'Verificando...' : 'Ingresar'}
+          </button>
         </div>
-        <div style={{ marginBottom: '20px' }}>
-          <label style={S.label}>Contraseña</label>
-          <input type="password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleLogin()} style={S.input} placeholder="••••••••" />
-        </div>
-        <button onClick={handleLogin} disabled={loading} style={{ ...S.btnPrimary, width: '100%', padding: '14px', opacity: loading ? 0.6 : 1 }}>
-          {loading ? 'Ingresando...' : 'INGRESAR'}
-        </button>
+
+        {/* Footer */}
+        <p style={{ textAlign: 'center', marginTop: '28px', fontSize: '11px', color: '#2a2a2a', letterSpacing: '0.06em' }}>
+          powered by Lynx
+        </p>
       </div>
     </div>
   );

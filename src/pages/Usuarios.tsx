@@ -197,7 +197,7 @@ const SeccionUsuarios = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj })
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead style={{ background: tema.bgInput }}>
               <tr>{['Usuario', 'Email', 'Rol', 'Estado', 'Acciones'].map(h =>
-                <th key={h} style={{ padding: '12px 16px', textAlign: 'left', color: '#22c55e', fontSize: '12px' }}>{h}</th>
+                <th key={h} style={{ padding: '12px 16px', textAlign: 'left', color: '#22c55e', fontSize: '13px' }}>{h}</th>
               )}</tr>
             </thead>
             <tbody>
