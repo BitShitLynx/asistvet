@@ -62,7 +62,7 @@ const PantallaLogin = ({ onLogin }: { onLogin: (u: Usuario) => void }) => {
         </div>
 
         {/* Footer */}
-        <p style={{ textAlign: 'center', marginTop: '28px', fontSize: '11px', color: '#2a2a2a', letterSpacing: '0.06em' }}>
+        <p style={{ textAlign: 'center', marginTop: '28px', fontSize: '11px', color: '#666666', letterSpacing: '0.06em' }}>
           powered by Lynx
         </p>
       </div>

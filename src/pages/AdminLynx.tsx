@@ -81,6 +81,17 @@ const AdminLynx = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj }) => {
     setCreando(false);
   };
 
+  const eliminarClinica = async (id: string, nombre: string) => {
+    if (id === 'aaaaaaaa-0000-0000-0000-000000000001') {
+      toast('No se puede eliminar la clínica demo', 'warning');
+      return;
+    }
+    const { error } = await supabase.from('clinicas').delete().eq('id', id);
+    if (error) { toast('Error: ' + error.message, 'error'); return; }
+    toast(`Clínica "${nombre}" eliminada`, 'success');
+    cargar();
+  };
+
   // Acceso restringido
   if (usuario.email !== ADMIN_EMAIL) {
     return (
@@ -151,13 +162,13 @@ const AdminLynx = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj }) => {
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead style={{ background: tema.bgInput }}>
-              <tr>{['Nombre', 'Email', 'Teléfono', 'Creada'].map(h =>
+              <tr>{['Nombre', 'Email', 'Teléfono', 'Creada', 'Acciones'].map(h =>
                 <th key={h} style={{ padding: '11px 16px', textAlign: 'left', color: tema.accent, fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase' as const }}>{h}</th>
               )}</tr>
             </thead>
             <tbody>
               {clinicas.length === 0 && (
-                <tr><td colSpan={4} style={{ padding: '24px', color: tema.textMuted, textAlign: 'center', fontSize: '13px' }}>Sin clínicas registradas.</td></tr>
+                <tr><td colSpan={5} style={{ padding: '24px', color: tema.textMuted, textAlign: 'center', fontSize: '13px' }}>Sin clínicas registradas.</td></tr>
               )}
               {clinicas.map(c => (
                 <tr key={c.id} style={{ borderBottom: `1px solid ${tema.border}` }}
@@ -168,6 +179,13 @@ const AdminLynx = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj }) => {
                   <td style={{ padding: '13px 16px', color: tema.textMuted, fontSize: '13px' }}>{c.telefono || '—'}</td>
                   <td style={{ padding: '13px 16px', color: tema.textMuted, fontSize: '13px' }}>
                     {new Date(c.created_at).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                  </td>
+                  <td style={{ padding: '13px 16px' }}>
+                    <button
+                      onClick={() => eliminarClinica(c.id, c.nombre)}
+                      style={{ padding: '4px 10px', background: 'transparent', color: '#c07070', border: '1px solid #c07070', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
+                      Eliminar
+                    </button>
                   </td>
                 </tr>
               ))}
