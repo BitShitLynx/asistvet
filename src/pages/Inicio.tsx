@@ -26,9 +26,9 @@ const PantallaInicio = ({ usuario, onNavegar, tema }: { usuario: Usuario; onNave
 
       {/* Banner */}
       <div style={{ ...S.card, borderLeft: '2px solid #3a6e3a', borderRadius: '8px' }}>
-        <p style={{ margin: '0 0 4px', fontSize: '11px', color: tema.textMuted, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{saludo}</p>
+        <p style={{ margin: '0 0 4px', fontSize: '11px', color: '#888888', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{saludo}</p>
         <h2 style={{ margin: '0 0 6px', color: tema.text, fontSize: '22px', fontWeight: '600', letterSpacing: '0.01em' }}>{usuario.nombre}</h2>
-        <p style={{ margin: 0, fontSize: '13px', color: tema.textMuted, letterSpacing: '0.02em' }}>
+        <p style={{ margin: 0, fontSize: '13px', color: '#888888', letterSpacing: '0.02em' }}>
           {new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
         </p>
       </div>

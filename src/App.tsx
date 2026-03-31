@@ -230,7 +230,7 @@ const App = () => {
           <p style={{ margin: '0 0 7px', fontSize: '14px', fontWeight: '600', color: '#c8c8c8', letterSpacing: '0.01em' }}>{usuario.nombre}</p>
           <span style={{ fontSize: '11px', background: rolStyle.bg, color: rolStyle.color, border: `1px solid ${rolStyle.border}`, padding: '2px 10px', borderRadius: '3px', letterSpacing: '0.08em', textTransform: 'uppercase' as const, fontWeight: '500' }}>{usuario.rol}</span>
           {clinicaNombre && (
-            <p style={{ margin: '8px 0 0', fontSize: '12px', color: '#666', letterSpacing: '0.04em', borderTop: '1px solid #1e1e1e', paddingTop: '8px' }}>
+            <p style={{ margin: '8px 0 0', fontSize: '12px', color: '#888', letterSpacing: '0.04em', borderTop: '1px solid #1e1e1e', paddingTop: '8px' }}>
               {clinicaNombre}
             </p>
           )}
@@ -243,9 +243,9 @@ const App = () => {
               <div style={{ fontSize: '12px', color: '#666', letterSpacing: '0.12em', textTransform: 'uppercase' as const, padding: '0 12px', marginBottom: '8px', fontWeight: '500' }}>{grupo.label}</div>
               {grupo.items.map(({ key, label }) => (
                 <button key={key} onClick={() => navegarA(key)}
-                  style={{ width: '100%', padding: '10px 12px', border: 'none', borderRadius: '5px', textAlign: 'left', cursor: 'pointer', fontSize: '14px', letterSpacing: '0.02em', marginBottom: '1px', background: vista === key ? '#1a2a1a' : 'transparent', color: vista === key ? '#5a9e5a' : '#888', borderLeft: vista === key ? '2px solid #5a9e5a' : '2px solid transparent', fontWeight: vista === key ? '500' : '400' }}
+                  style={{ width: '100%', padding: '10px 12px', border: 'none', borderRadius: '5px', textAlign: 'left', cursor: 'pointer', fontSize: '14px', letterSpacing: '0.02em', marginBottom: '1px', background: vista === key ? '#1a2a1a' : 'transparent', color: vista === key ? '#5a9e5a' : '#aaaaaa', borderLeft: vista === key ? '2px solid #5a9e5a' : '2px solid transparent', fontWeight: vista === key ? '500' : '400' }}
                   onMouseEnter={e => { if (vista !== key) { (e.currentTarget as HTMLButtonElement).style.background = '#181818'; (e.currentTarget as HTMLButtonElement).style.color = '#aaa'; } }}
-                  onMouseLeave={e => { if (vista !== key) { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#888'; } }}
+                  onMouseLeave={e => { if (vista !== key) { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#aaaaaa'; } }}
                 >{label}</button>
               ))}
             </div>
