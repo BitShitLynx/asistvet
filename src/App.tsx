@@ -20,6 +20,7 @@ const SeccionGastos         = lazy(() => import('./pages/Gastos'));
 const SeccionReportes       = lazy(() => import('./pages/Reportes'));
 const SeccionUsuarios       = lazy(() => import('./pages/Usuarios'));
 const AdminLynx             = lazy(() => import('./pages/AdminLynx'));
+const SeccionAjustes        = lazy(() => import('./pages/Ajustes'));
 
 // ── Alertas de stock bajo al iniciar sesión ───────────────────────────────────
 const StockAlertInit = ({ productos }: { productos: {nombre: string; stock_actual: number; unidad: string}[] }) => {
@@ -197,6 +198,7 @@ const App = () => {
         { key: 'gastos',      label: 'Gastos' },
         { key: 'reportes',    label: 'Reportes' },
         { key: 'usuarios',    label: 'Usuarios' },
+        { key: 'ajustes',     label: 'Ajustes' },
         ...(usuario.email === 'marianonicolasmontano@gmail.com' ? [{ key: 'admin_lynx', label: 'Admin Lynx' }] : []),
       ],
     },
@@ -308,6 +310,7 @@ const App = () => {
             {vista === 'gastos'         && <SeccionGastos         usuario={usuario} tema={tema} />}
             {vista === 'reportes'       && <SeccionReportes       usuario={usuario} tema={tema} />}
             {vista === 'usuarios'       && <SeccionUsuarios       usuario={usuario} tema={tema} />}
+            {vista === 'ajustes'        && <SeccionAjustes        usuario={usuario} tema={tema} temaKey={temaKey} onCambiarTema={k => { setTemaKey(k); localStorage.setItem('valvet-tema', k); }} />}
             {vista === 'admin_lynx'     && <AdminLynx             usuario={usuario} tema={tema} />}
           </Suspense>
         </main>
