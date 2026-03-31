@@ -135,14 +135,16 @@ const App = () => {
             .from('clinicas').select('nombre')
             .eq('id', data.clinica_id).single();
           if (clinica) setClinicaNombre(clinica.nombre);
+          const notifActivas = localStorage.getItem('valvet-notificaciones') !== 'false';
+          const umbral = parseInt(localStorage.getItem('valvet-umbral-stock') || '5');
           const { data: productosConPocoStock } = await supabase
             .from('productos')
             .select('nombre, stock_actual, unidad')
             .eq('clinica_id', data.clinica_id)
             .eq('activo', true)
-            .lte('stock_actual', 5)
+            .lte('stock_actual', umbral)
             .order('stock_actual', { ascending: true });
-          if (productosConPocoStock && productosConPocoStock.length > 0) {
+          if (notifActivas && productosConPocoStock && productosConPocoStock.length > 0) {
             setStockAlertas(productosConPocoStock);
           }
         }

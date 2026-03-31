@@ -88,7 +88,7 @@ const FormReceta = ({ clinicaId, usuario, onSave, onClose, tema }: {
   const [pacientes, setPacientes] = useState<any[]>([]);
   const [form, setForm] = useState({
     paciente_id: '', fecha: new Date().toISOString().split('T')[0],
-    diagnostico: '', indicaciones: '', matricula: '',
+    diagnostico: '', indicaciones: '', matricula: localStorage.getItem(`valvet-matricula-${usuario.id}`) || '',
   });
   const [items, setItems] = useState<RecetaItem[]>([itemVacio()]);
   const [saving, setSaving] = useState(false);
