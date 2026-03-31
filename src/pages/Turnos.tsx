@@ -42,7 +42,25 @@ const SeccionTurnos = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj }) =
   const [turnoAccion, setTurnoAccion] = useState<Turno | null>(null);
   const [modalCobro, setModalCobro] = useState(false);
 
+  // Mejora 2 — Próximos turnos
+  const [proximos, setProximos] = useState<any[]>([]);
+
+  // Mejora 3 — Reprogramar
+  const [turnoReprogramar, setTurnoReprogramar] = useState<Turno | null>(null);
+  const [nuevaFecha, setNuevaFecha] = useState('');
+  const [nuevaHora, setNuevaHora] = useState('');
+
+  // Mejora 4 — Vista semanal
+  const [vistaMode, setVistaMode] = useState<'dia' | 'semana'>('dia');
+  const [turnosSemana, setTurnosSemana] = useState<any[]>([]);
+
   const esAdmin = usuario.rol === 'admin';
+
+  const diasSemana = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(fechaSel + 'T00:00:00');
+    d.setDate(d.getDate() + i);
+    return d.toISOString().split('T')[0];
+  });
 
   const cargar = useCallback(async () => {
     setLoading(true);
@@ -60,7 +78,38 @@ const SeccionTurnos = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj }) =
     setLoading(false);
   }, [usuario.clinica_id, fechaSel]);
 
-  useEffect(() => { cargar(); }, [cargar]);
+  const cargarProximos = useCallback(async () => {
+    const ahora = new Date();
+    const horaActual = ahora.toTimeString().slice(0, 5);
+    const { data } = await supabase
+      .from('turnos')
+      .select('*, pacientes(nombre), tipos_consulta(nombre)')
+      .eq('clinica_id', usuario.clinica_id)
+      .eq('fecha', hoy())
+      .in('estado', ['pendiente', 'confirmado'])
+      .gte('hora', horaActual)
+      .order('hora', { ascending: true })
+      .limit(3);
+    setProximos(data || []);
+  }, [usuario.clinica_id]);
+
+  const cargarSemana = useCallback(async () => {
+    const { data } = await supabase
+      .from('turnos')
+      .select('*, pacientes(nombre), tipos_consulta(nombre)')
+      .eq('clinica_id', usuario.clinica_id)
+      .gte('fecha', diasSemana[0])
+      .lte('fecha', diasSemana[6])
+      .order('fecha').order('hora');
+    setTurnosSemana(data || []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [usuario.clinica_id, fechaSel]);
+
+  useEffect(() => { cargar(); cargarProximos(); }, [cargar, cargarProximos]);
+
+  useEffect(() => {
+    if (vistaMode === 'semana') cargarSemana();
+  }, [vistaMode, cargarSemana]);
 
   const cambiarEstado = async (turno: Turno, nuevoEstado: string) => {
     const { error } = await supabase.from('turnos').update({ estado: nuevoEstado }).eq('id', turno.id);
@@ -69,6 +118,23 @@ const SeccionTurnos = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj }) =
       setTurnoAccion(turno); setModalCobro(true);
     }
     cargar();
+  };
+
+  const reprogramar = async () => {
+    if (!turnoReprogramar || !nuevaFecha) return;
+    const { error } = await supabase
+      .from('turnos')
+      .update({ fecha: nuevaFecha, hora: nuevaHora || null })
+      .eq('id', turnoReprogramar.id);
+    if (error) { toast('Error al reprogramar', 'error'); return; }
+    toast('Turno reprogramado correctamente', 'success');
+    setTurnoReprogramar(null);
+    cargar();
+  };
+
+  const setVistaDia = (fecha: string) => {
+    setFechaSel(fecha);
+    setVistaMode('dia');
   };
 
   const kpis = {
@@ -100,6 +166,17 @@ const SeccionTurnos = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj }) =
         <input type="date" value={fechaSel} onChange={e => setFechaSel(e.target.value)}
           style={{ ...S.input, width: 'auto', padding: '10px 14px', colorScheme: 'dark' }} />
         <button onClick={() => setFechaSel(hoy())} style={{ ...S.btnGhost, padding: '10px 16px', fontSize: '13px' }}>Hoy</button>
+        {/* Toggle día / semana */}
+        <div style={{ display: 'flex', border: `1px solid ${tema.border}`, borderRadius: '6px', overflow: 'hidden' }}>
+          <button onClick={() => setVistaMode('dia')}
+            style={{ padding: '9px 16px', border: 'none', cursor: 'pointer', fontSize: '13px', background: vistaMode === 'dia' ? '#1a2a1a' : 'transparent', color: vistaMode === 'dia' ? tema.accent : tema.textMuted }}>
+            Día
+          </button>
+          <button onClick={() => setVistaMode('semana')}
+            style={{ padding: '9px 16px', border: 'none', cursor: 'pointer', fontSize: '13px', background: vistaMode === 'semana' ? '#1a2a1a' : 'transparent', color: vistaMode === 'semana' ? tema.accent : tema.textMuted }}>
+            Semana
+          </button>
+        </div>
         <button onClick={() => { setTurnoAccion(null); setModalNuevo(true); }}
           style={{ ...S.btnPrimary, whiteSpace: 'nowrap' }}>+ Nuevo turno</button>
         <button onClick={() => { setTurnoAccion(null); setModalNuevo(true); }}
@@ -110,61 +187,122 @@ const SeccionTurnos = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj }) =
         )}
       </div>
 
-      {/* Tabla de turnos */}
-      <div style={{ ...S.card, padding: 0, overflow: 'hidden' }}>
-        <div style={{ padding: '14px 20px', borderBottom: `1px solid ${tema.border}` }}>
-          <h4 style={{ margin: 0, color: tema.text }}>📅 {fmtFecha(fechaSel)} — {turnos.length} turnos</h4>
+      {/* Banner próximos turnos (solo vista día = hoy) */}
+      {vistaMode === 'dia' && fechaSel === hoy() && proximos.length > 0 && (
+        <div style={{ ...S.card, border: '1px solid #2d5a2d', background: '#0a1a0a' }}>
+          <p style={{ margin: '0 0 12px', fontSize: '11px', color: tema.accent, letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: '500' }}>
+            Próximos turnos hoy
+          </p>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            {proximos.map(t => (
+              <div key={t.id} style={{ padding: '10px 16px', background: '#111', borderRadius: '8px', border: '1px solid #1e3a1e' }}>
+                <p style={{ margin: 0, fontWeight: '600', color: tema.text, fontSize: '14px' }}>
+                  {fmtHora(t.hora)} — {t.pacientes?.nombre}
+                </p>
+                <p style={{ margin: '3px 0 0', fontSize: '12px', color: tema.textMuted }}>
+                  {t.tipos_consulta?.nombre || 'Sin tipo'}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
-        {loading ? <p style={{ padding: '20px', color: tema.textMuted }}>Cargando...</p> : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead style={{ background: tema.bgInput }}>
-              <tr>{['Hora', 'Paciente', 'Tipo', 'Veterinario', 'Estado', 'Acciones'].map(h =>
-                <th key={h} style={{ padding: '11px 15px', textAlign: 'left', color: tema.accent, fontSize: '13px' }}>{h}</th>
-              )}</tr>
-            </thead>
-            <tbody>
-              {turnos.length === 0 && (
-                <tr><td colSpan={6} style={{ padding: '30px', color: tema.textMuted, textAlign: 'center' }}>
-                  No hay turnos para este día.
-                </td></tr>
-              )}
-              {turnos.map(t => {
-                const est = ESTADO_TURNO[t.estado] || { label: t.estado, color: '#475569' };
-                return (
-                  <tr key={t.id} style={{ borderBottom: `1px solid ${tema.border}` }}
-                    onMouseEnter={e => (e.currentTarget.style.background = tema.rowHover)}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                    <td style={{ padding: '12px 15px', color: tema.text, fontWeight: 'bold', fontSize: '15px' }}>
-                      {t.es_guardia ? <span style={{ fontSize: '11px', background: '#d97706', padding: '2px 8px', borderRadius: '99px', color: 'white' }}>GUARDIA</span> : fmtHora(t.hora)}
-                    </td>
-                    <td style={{ padding: '12px 15px' }}>
-                      <p style={{ margin: 0, fontWeight: 'bold', color: tema.text }}>{t.pacientes?.nombre || '—'}</p>
-                      <p style={{ margin: '2px 0 0', fontSize: '12px', color: tema.textMuted }}>{t.pacientes?.especie}{t.pacientes?.raza ? ` · ${t.pacientes.raza}` : ''}</p>
-                    </td>
-                    <td style={{ padding: '12px 15px' }}>
-                      <p style={{ margin: 0, fontSize: '13px', color: tema.text }}>{t.tipos_consulta?.nombre || '—'}</p>
-                      {t.tipos_consulta?.precio && <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#34d399' }}>${t.tipos_consulta.precio.toLocaleString('es-AR')}</p>}
-                    </td>
-                    <td style={{ padding: '12px 15px', fontSize: '13px', color: tema.textMuted }}>{t.usuarios?.nombre || '—'}</td>
-                    <td style={{ padding: '12px 15px' }}>
-                      <span style={{ fontSize: '11px', background: est.color, padding: '3px 10px', borderRadius: '99px', color: 'white', fontWeight: 'bold' }}>{est.label}</span>
-                    </td>
-                    <td style={{ padding: '12px 15px' }}>
-                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                        {t.estado === 'pendiente' && <button onClick={() => cambiarEstado(t, 'confirmado')} style={{ padding: '4px 10px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>✓ Confirmar</button>}
-                        {t.estado === 'confirmado' && <button onClick={() => cambiarEstado(t, 'en_curso')} style={{ padding: '4px 10px', background: '#d97706', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>▶ Iniciar</button>}
-                        {t.estado === 'en_curso' && <button onClick={() => cambiarEstado(t, 'finalizado')} style={{ padding: '4px 10px', background: '#059669', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>✓ Finalizar</button>}
-                        {(t.estado === 'finalizado') && <button onClick={() => { setTurnoAccion(t); setModalCobro(true); }} style={{ padding: '4px 10px', background: '#059669', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>💰 Cobrar</button>}
-                        {t.estado !== 'cancelado' && t.estado !== 'finalizado' && <button onClick={() => cambiarEstado(t, 'cancelado')} style={{ padding: '4px 10px', background: 'transparent', color: '#f87171', border: '1px solid #f87171', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>✕</button>}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </div>
+      )}
+
+      {/* Vista semanal */}
+      {vistaMode === 'semana' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px' }}>
+          {diasSemana.map(fecha => {
+            const turnosDia = turnosSemana.filter(t => t.fecha === fecha);
+            const esHoy = fecha === hoy();
+            const d = new Date(fecha + 'T00:00:00');
+            const labelDia = d.toLocaleDateString('es-AR', { weekday: 'short', day: '2-digit', month: '2-digit' });
+            return (
+              <div key={fecha} style={{ background: esHoy ? '#0a1a0a' : tema.bgCard, border: `1px solid ${esHoy ? '#2d5a2d' : tema.border}`, borderRadius: '8px', padding: '12px', minHeight: '120px' }}>
+                <p style={{ margin: '0 0 10px', fontSize: '11px', fontWeight: '600', color: esHoy ? tema.accent : tema.textMuted, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                  {labelDia}
+                </p>
+                {turnosDia.length === 0
+                  ? <p style={{ fontSize: '11px', color: '#333' }}>Sin turnos</p>
+                  : turnosDia.map(t => (
+                    <div key={t.id} onClick={() => setVistaDia(fecha)}
+                      style={{ padding: '6px 8px', marginBottom: '4px', background: '#111', borderRadius: '4px', border: '1px solid #1e1e1e', cursor: 'pointer' }}>
+                      <p style={{ margin: 0, fontSize: '12px', color: tema.text, fontWeight: '500' }}>
+                        {fmtHora(t.hora)} {t.pacientes?.nombre}
+                      </p>
+                    </div>
+                  ))
+                }
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Tabla de turnos (vista día) */}
+      {vistaMode === 'dia' && (
+        <div style={{ ...S.card, padding: 0, overflow: 'hidden' }}>
+          <div style={{ padding: '14px 20px', borderBottom: `1px solid ${tema.border}` }}>
+            <h4 style={{ margin: 0, color: tema.text }}>📅 {fmtFecha(fechaSel)} — {turnos.length} turnos</h4>
+          </div>
+          {loading ? <p style={{ padding: '20px', color: tema.textMuted }}>Cargando...</p> : (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead style={{ background: tema.bgInput }}>
+                <tr>{['Hora', 'Paciente', 'Tipo', 'Veterinario', 'Estado', 'Acciones'].map(h =>
+                  <th key={h} style={{ padding: '11px 15px', textAlign: 'left', color: tema.accent, fontSize: '13px' }}>{h}</th>
+                )}</tr>
+              </thead>
+              <tbody>
+                {turnos.length === 0 && (
+                  <tr><td colSpan={6} style={{ padding: '30px', color: tema.textMuted, textAlign: 'center' }}>
+                    No hay turnos para este día.
+                  </td></tr>
+                )}
+                {turnos.map(t => {
+                  const est = ESTADO_TURNO[t.estado] || { label: t.estado, color: '#475569' };
+                  return (
+                    <tr key={t.id} style={{ borderBottom: `1px solid ${tema.border}` }}
+                      onMouseEnter={e => (e.currentTarget.style.background = tema.rowHover)}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                      <td style={{ padding: '12px 15px', color: tema.text, fontWeight: 'bold', fontSize: '15px' }}>
+                        {t.es_guardia ? <span style={{ fontSize: '11px', background: '#d97706', padding: '2px 8px', borderRadius: '99px', color: 'white' }}>GUARDIA</span> : fmtHora(t.hora)}
+                      </td>
+                      <td style={{ padding: '12px 15px' }}>
+                        <p style={{ margin: 0, fontWeight: 'bold', color: tema.text }}>{t.pacientes?.nombre || '—'}</p>
+                        <p style={{ margin: '2px 0 0', fontSize: '12px', color: tema.textMuted }}>{t.pacientes?.especie}{t.pacientes?.raza ? ` · ${t.pacientes.raza}` : ''}</p>
+                      </td>
+                      <td style={{ padding: '12px 15px' }}>
+                        <p style={{ margin: 0, fontSize: '13px', color: tema.text }}>{t.tipos_consulta?.nombre || '—'}</p>
+                        {t.tipos_consulta?.precio && <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#34d399' }}>${t.tipos_consulta.precio.toLocaleString('es-AR')}</p>}
+                      </td>
+                      <td style={{ padding: '12px 15px', fontSize: '13px', color: tema.textMuted }}>{t.usuarios?.nombre || '—'}</td>
+                      <td style={{ padding: '12px 15px' }}>
+                        <span style={{ fontSize: '11px', background: est.color, padding: '3px 10px', borderRadius: '99px', color: 'white', fontWeight: 'bold' }}>{est.label}</span>
+                      </td>
+                      <td style={{ padding: '12px 15px' }}>
+                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                          {t.estado === 'pendiente' && <button onClick={() => cambiarEstado(t, 'confirmado')} style={{ padding: '4px 10px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>✓ Confirmar</button>}
+                          {t.estado === 'confirmado' && <button onClick={() => cambiarEstado(t, 'en_curso')} style={{ padding: '4px 10px', background: '#d97706', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>▶ Iniciar</button>}
+                          {t.estado === 'en_curso' && <button onClick={() => cambiarEstado(t, 'finalizado')} style={{ padding: '4px 10px', background: '#059669', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>✓ Finalizar</button>}
+                          {t.estado === 'finalizado' && <button onClick={() => { setTurnoAccion(t); setModalCobro(true); }} style={{ padding: '4px 10px', background: '#059669', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>💰 Cobrar</button>}
+                          {t.estado !== 'cancelado' && t.estado !== 'finalizado' && (
+                            <>
+                              <button onClick={() => { setTurnoReprogramar(t); setNuevaFecha(t.fecha); setNuevaHora(fmtHora(t.hora)); }}
+                                style={{ padding: '4px 10px', background: 'transparent', color: tema.textMuted, border: `1px solid ${tema.border}`, borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
+                                Reprogramar
+                              </button>
+                              <button onClick={() => cambiarEstado(t, 'cancelado')} style={{ padding: '4px 10px', background: 'transparent', color: '#f87171', border: '1px solid #f87171', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>✕</button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
 
       {/* Modal nuevo turno */}
       {modalNuevo && (
@@ -191,6 +329,31 @@ const SeccionTurnos = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj }) =
             clinicaId={usuario.clinica_id} turno={turnoAccion}
             onSave={() => { setModalCobro(false); setTurnoAccion(null); cargar(); }}
             onClose={() => { setModalCobro(false); setTurnoAccion(null); }} tema={tema} />
+        </Modal>
+      )}
+
+      {/* Modal reprogramar */}
+      {turnoReprogramar && (
+        <Modal titulo="Reprogramar turno" onClose={() => setTurnoReprogramar(null)} tema={tema}>
+          <p style={{ color: tema.textMuted, fontSize: '13px', marginBottom: '20px' }}>
+            Turno de <strong style={{ color: tema.text }}>{turnoReprogramar.pacientes?.nombre}</strong>
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div>
+              <label style={S.label}>Nueva fecha</label>
+              <input type="date" style={{ ...S.input, colorScheme: 'dark' }} value={nuevaFecha} onChange={e => setNuevaFecha(e.target.value)} />
+            </div>
+            <div>
+              <label style={S.label}>Nueva hora</label>
+              <input type="time" style={{ ...S.input, colorScheme: 'dark' }} value={nuevaHora} onChange={e => setNuevaHora(e.target.value)} />
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+            <button onClick={reprogramar} style={{ ...S.btnPrimary, flex: 1, padding: '12px' }}>
+              Confirmar reprogramación
+            </button>
+            <button onClick={() => setTurnoReprogramar(null)} style={S.btnGhost}>Cancelar</button>
+          </div>
         </Modal>
       )}
     </div>
