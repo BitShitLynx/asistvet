@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { supabase } from './supabaseClient';
 import type { Usuario } from './supabaseClient';
 import { TEMAS } from './styles/theme';
@@ -26,8 +26,9 @@ const SeccionAjustes        = lazy(() => import('./pages/Ajustes'));
 const StockAlertInit = ({ productos }: { productos: {nombre: string; stock_actual: number; unidad: string}[] }) => {
   const { toast } = useToast();
   useEffect(() => {
-    const primeros = productos.slice(0, 3);
-    const restantes = productos.length - 3;
+    const MAX_TOASTS = 3;
+    const primeros = productos.slice(0, MAX_TOASTS);
+    const restantes = productos.length - MAX_TOASTS;
 
     primeros.forEach((p, i) => {
       setTimeout(() => {
@@ -37,7 +38,7 @@ const StockAlertInit = ({ productos }: { productos: {nombre: string; stock_actua
             : `Stock bajo: ${p.nombre} — ${p.stock_actual} ${p.unidad}`,
           p.stock_actual === 0 ? 'error' : 'warning'
         );
-      }, i * 500);
+      }, i * 600);
     });
 
     if (restantes > 0) {
@@ -46,7 +47,7 @@ const StockAlertInit = ({ productos }: { productos: {nombre: string; stock_actua
           `${restantes} producto${restantes > 1 ? 's' : ''} más con stock crítico — revisá Inventario`,
           'warning'
         );
-      }, 3 * 500 + 300);
+      }, MAX_TOASTS * 600 + 400);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -116,6 +117,7 @@ const App = () => {
   const [clinicaNombre, setClinicaNombre] = useState<string>('');
   const [stockAlertas, setStockAlertas] = useState<{nombre: string; stock_actual: number; unidad: string}[]>([]);
   const [modoRecuperacion, setModoRecuperacion] = useState(false);
+  const stockAlertaMostrada = useRef(false);
 
   const tema = TEMAS[temaKey];
 
@@ -135,8 +137,8 @@ const App = () => {
             .from('clinicas').select('nombre')
             .eq('id', data.clinica_id).single();
           if (clinica) setClinicaNombre(clinica.nombre);
-          const alertasMostradas = sessionStorage.getItem('valvet-stock-alertas');
-          if (!alertasMostradas) {
+          if (!stockAlertaMostrada.current) {
+            stockAlertaMostrada.current = true;
             const notifActivas = localStorage.getItem('valvet-notificaciones') !== 'false';
             if (notifActivas) {
               const umbral = parseInt(localStorage.getItem('valvet-umbral-stock') || '5');
@@ -149,7 +151,6 @@ const App = () => {
                 .order('stock_actual', { ascending: true });
               if (productosConPocoStock && productosConPocoStock.length > 0) {
                 setStockAlertas(productosConPocoStock);
-                sessionStorage.setItem('valvet-stock-alertas', 'true');
               }
             }
           }
@@ -165,7 +166,7 @@ const App = () => {
 
   const navegarA = (v: string) => { localStorage.setItem('valvet-vista', v); setVista(v); };
 
-  const logout = async () => { await supabase.auth.signOut(); localStorage.removeItem('valvet-vista'); sessionStorage.removeItem('valvet-stock-alertas'); setUsuario(null); setVista('inicio'); };
+  const logout = async () => { await supabase.auth.signOut(); localStorage.removeItem('valvet-vista'); setUsuario(null); setVista('inicio'); };
 
   if (checkingAuth) return (
     <div style={{ minHeight: '100vh', background: TEMAS.dark.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
