@@ -190,30 +190,31 @@ const App = () => {
     {
       label: 'Clínica',
       items: [
-        { key: 'inicio',         label: 'Inicio' },
-        { key: 'turnos',         label: 'Turnos' },
-        { key: 'pacientes',      label: 'Pacientes' },
-        { key: 'propietarios',   label: 'Propietarios' },
-        { key: 'intervenciones', label: 'Intervenciones' },
-        { key: 'cirugias',       label: 'Cirugías' },
-        { key: 'recetas',        label: 'Recetas' },
-        { key: 'stock',          label: 'Inventario' },
+        { key: 'inicio',         label: 'Inicio',         roles: ['admin', 'veterinario', 'recepcionista'] },
+        { key: 'turnos',         label: 'Turnos',         roles: ['admin', 'veterinario', 'recepcionista'] },
+        { key: 'pacientes',      label: 'Pacientes',      roles: ['admin', 'veterinario', 'recepcionista'] },
+        { key: 'propietarios',   label: 'Propietarios',   roles: ['admin', 'veterinario', 'recepcionista'] },
+        { key: 'intervenciones', label: 'Intervenciones', roles: ['admin', 'veterinario'] },
+        { key: 'cirugias',       label: 'Cirugías',       roles: ['admin', 'veterinario'] },
+        { key: 'recetas',        label: 'Recetas',        roles: ['admin', 'veterinario'] },
+        { key: 'stock',          label: 'Inventario',     roles: ['admin', 'veterinario'] },
       ],
     },
     {
       label: 'Administración',
       items: [
-        { key: 'facturacion', label: 'Facturación' },
-        { key: 'gastos',      label: 'Gastos' },
-        { key: 'reportes',    label: 'Reportes' },
-        { key: 'usuarios',    label: 'Usuarios' },
-        { key: 'ajustes',     label: 'Ajustes' },
-        ...(usuario.email === 'marianonicolasmontano@gmail.com' ? [{ key: 'admin_lynx', label: 'Admin Lynx' }] : []),
+        { key: 'facturacion', label: 'Facturación', roles: ['admin', 'recepcionista'] },
+        { key: 'gastos',      label: 'Gastos',      roles: ['admin'] },
+        { key: 'reportes',    label: 'Reportes',    roles: ['admin'] },
+        { key: 'usuarios',    label: 'Usuarios',    roles: ['admin'] },
+        { key: 'ajustes',     label: 'Ajustes',     roles: ['admin', 'veterinario', 'recepcionista'] },
+        ...(usuario.email === 'marianonicolasmontano@gmail.com' ? [{ key: 'admin_lynx', label: 'Admin Lynx', roles: ['admin'] }] : []),
       ],
     },
   ];
 
-  const vistaLabel = NAV_GRUPOS.flatMap(g => g.items).find(n => n.key === vista)?.label || '';
+  const todosLosItems = NAV_GRUPOS.flatMap(g => g.items);
+  const vistaLabel = todosLosItems.find(n => n.key === vista)?.label || '';
   const breadcrumb = vista === 'inicio' ? ['Inicio'] : ['Inicio', vistaLabel];
   const rolStyle   = ROL_BADGE[usuario.rol] || ROL_BADGE.recepcionista;
   const iniciales  = usuario.nombre.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase();
@@ -249,10 +250,13 @@ const App = () => {
 
         {/* Nav agrupada */}
         <nav style={{ flex: 1, overflowY: 'auto' }}>
-          {NAV_GRUPOS.map(grupo => (
+          {NAV_GRUPOS.map(grupo => {
+            const itemsFiltrados = grupo.items.filter(item => item.roles.includes(usuario.rol));
+            if (itemsFiltrados.length === 0) return null;
+            return (
             <div key={grupo.label} style={{ marginBottom: '20px' }}>
               <div style={{ fontSize: '12px', color: '#666', letterSpacing: '0.12em', textTransform: 'uppercase' as const, padding: '0 12px', marginBottom: '8px', fontWeight: '500' }}>{grupo.label}</div>
-              {grupo.items.map(({ key, label }) => (
+              {itemsFiltrados.map(({ key, label }) => (
                 <button key={key} onClick={() => navegarA(key)}
                   style={{ width: '100%', padding: '10px 12px', border: 'none', borderRadius: '5px', textAlign: 'left', cursor: 'pointer', fontSize: '14px', letterSpacing: '0.02em', marginBottom: '1px', background: vista === key ? '#1a2a1a' : 'transparent', color: vista === key ? '#5a9e5a' : '#aaaaaa', borderLeft: vista === key ? '2px solid #5a9e5a' : '2px solid transparent', fontWeight: vista === key ? '500' : '400' }}
                   onMouseEnter={e => { if (vista !== key) { (e.currentTarget as HTMLButtonElement).style.background = '#181818'; (e.currentTarget as HTMLButtonElement).style.color = '#aaa'; } }}
@@ -260,7 +264,8 @@ const App = () => {
                 >{label}</button>
               ))}
             </div>
-          ))}
+            );
+          })}
         </nav>
 
         {/* Cerrar sesión */}
