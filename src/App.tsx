@@ -137,6 +137,23 @@ const PantallaRecuperacion = ({ onDone }: { onDone: () => void }) => {
   );
 };
 
+const PERMISOS: Record<string, string[]> = {
+  inicio:         ['admin', 'veterinario', 'recepcionista'],
+  turnos:         ['admin', 'veterinario', 'recepcionista'],
+  pacientes:      ['admin', 'veterinario', 'recepcionista'],
+  propietarios:   ['admin', 'veterinario', 'recepcionista'],
+  intervenciones: ['admin', 'veterinario'],
+  cirugias:       ['admin', 'veterinario'],
+  recetas:        ['admin', 'veterinario'],
+  stock:          ['admin', 'veterinario'],
+  facturacion:    ['admin', 'recepcionista'],
+  gastos:         ['admin'],
+  reportes:       ['admin'],
+  usuarios:       ['admin'],
+  ajustes:        ['admin', 'veterinario', 'recepcionista'],
+  admin_lynx:     ['admin'],
+};
+
 const App = () => {
   const [usuario, setUsuario]           = useState<Usuario | null>(null);
   const [vista, setVista]               = useState<string>(
@@ -164,6 +181,9 @@ const App = () => {
         const { data } = await supabase.from('usuarios').select('*').eq('id', session.user.id).single();
         if (data) {
           setUsuario(data as Usuario);
+          const vistaGuardada = localStorage.getItem('valvet-vista') || 'inicio';
+          const vistaInicial = PERMISOS[vistaGuardada]?.includes(data.rol) ? vistaGuardada : 'inicio';
+          setVista(vistaInicial);
           const { data: clinica } = await supabase
             .from('clinicas').select('nombre')
             .eq('id', data.clinica_id).single();
@@ -197,7 +217,15 @@ const App = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const navegarA = (v: string) => { localStorage.setItem('valvet-vista', v); setVista(v); };
+  const navegarA = (v: string) => {
+    const permisosVista = PERMISOS[v] || ['admin'];
+    if (!permisosVista.includes(usuario!.rol) &&
+        usuario!.email !== 'marianonicolasmontano@gmail.com') {
+      return;
+    }
+    localStorage.setItem('valvet-vista', v);
+    setVista(v);
+  };
 
   const logout = async () => { await supabase.auth.signOut(); localStorage.removeItem('valvet-vista'); setUsuario(null); setVista('inicio'); };
 
@@ -357,16 +385,16 @@ const App = () => {
             {vista === 'turnos'         && <SeccionTurnos         usuario={usuario} tema={tema} />}
             {vista === 'pacientes'      && <SeccionPacientes      usuario={usuario} tema={tema} />}
             {vista === 'propietarios'   && <SeccionPropietarios   usuario={usuario} tema={tema} />}
-            {vista === 'intervenciones' && <SeccionIntervenciones usuario={usuario} tema={tema} />}
-            {vista === 'cirugias'       && <SeccionCirugias       usuario={usuario} tema={tema} />}
-            {vista === 'recetas'        && <SeccionRecetas        usuario={usuario} tema={tema} />}
-            {vista === 'stock'          && <SeccionInventario     usuario={usuario} tema={tema} />}
-            {vista === 'facturacion'    && <SeccionFacturacion    usuario={usuario} tema={tema} />}
-            {vista === 'gastos'         && <SeccionGastos         usuario={usuario} tema={tema} />}
-            {vista === 'reportes'       && <SeccionReportes       usuario={usuario} tema={tema} />}
-            {vista === 'usuarios'       && <SeccionUsuarios       usuario={usuario} tema={tema} />}
+            {vista === 'intervenciones' && PERMISOS.intervenciones.includes(usuario.rol) && <SeccionIntervenciones usuario={usuario} tema={tema} />}
+            {vista === 'cirugias'       && PERMISOS.cirugias.includes(usuario.rol)       && <SeccionCirugias       usuario={usuario} tema={tema} />}
+            {vista === 'recetas'        && PERMISOS.recetas.includes(usuario.rol)        && <SeccionRecetas        usuario={usuario} tema={tema} />}
+            {vista === 'stock'          && PERMISOS.stock.includes(usuario.rol)          && <SeccionInventario     usuario={usuario} tema={tema} />}
+            {vista === 'facturacion'    && PERMISOS.facturacion.includes(usuario.rol)    && <SeccionFacturacion    usuario={usuario} tema={tema} />}
+            {vista === 'gastos'         && PERMISOS.gastos.includes(usuario.rol)         && <SeccionGastos         usuario={usuario} tema={tema} />}
+            {vista === 'reportes'       && PERMISOS.reportes.includes(usuario.rol)       && <SeccionReportes       usuario={usuario} tema={tema} />}
+            {vista === 'usuarios'       && PERMISOS.usuarios.includes(usuario.rol)       && <SeccionUsuarios       usuario={usuario} tema={tema} />}
             {vista === 'ajustes'        && <SeccionAjustes        usuario={usuario} tema={tema} temaKey={temaKey} onCambiarTema={k => { setTemaKey(k); localStorage.setItem('valvet-tema', k); }} />}
-            {vista === 'admin_lynx'     && <AdminLynx             usuario={usuario} tema={tema} />}
+            {vista === 'admin_lynx'     && usuario.email === 'marianonicolasmontano@gmail.com' && <AdminLynx usuario={usuario} tema={tema} />}
           </Suspense>
         </main>
       </div>
