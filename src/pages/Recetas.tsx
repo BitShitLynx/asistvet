@@ -10,9 +10,8 @@ interface RecetaItem { id?: string; medicamento: string; dosis: string; frecuenc
 interface Receta {
   id: string; paciente_id: string; veterinario_id?: string; fecha: string;
   diagnostico?: string; indicaciones?: string; matricula?: string;
-  pacientes?: { nombre: string; especie: string; raza?: string };
+  pacientes?: { nombre: string; especie: string; raza?: string; propietario_id?: string };
   usuarios?: { nombre: string };
-  propietarios?: { email?: string };
   receta_items?: RecetaItem[];
 }
 
@@ -297,6 +296,7 @@ const FormReceta = ({ clinicaId, usuario, onSave, onClose, tema }: {
     }));
     if (itemsPayload.length > 0) await supabase.from('receta_items').insert(itemsPayload);
     toast('Receta guardada correctamente', 'success');
+    console.log('Receta guardada, llamando onSave...');
     onSave(); onClose();
   };
 
@@ -379,18 +379,36 @@ const SeccionRecetas = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj }) 
   const [recetaVer, setRecetaVer] = useState<Receta | null>(null);
 
   const cargar = useCallback(async () => {
+    console.log('Iniciando carga de recetas...');
+    console.log('clinica_id:', usuario.clinica_id);
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('recetas')
-      .select('*, pacientes(nombre,especie,raza), usuarios(nombre), propietarios(email), receta_items(*)')
+      .select(`
+        *,
+        pacientes(nombre, especie, raza, propietario_id),
+        usuarios(nombre),
+        receta_items(*)
+      `)
       .eq('clinica_id', usuario.clinica_id)
       .order('fecha', { ascending: false });
+    console.log('Data recibida:', data);
+    console.log('Error:', error);
     setRecetas((data || []) as Receta[]);
     setLoading(false);
   }, [usuario.clinica_id]);
 
-  const enviarEmail = (receta: Receta) => {
-    const propietarioEmail = receta.propietarios?.email || '';
+  const enviarEmail = async (receta: Receta) => {
+    let propietarioEmail = '';
+    const propietarioId = receta.pacientes?.propietario_id;
+    if (propietarioId) {
+      const { data: propietario } = await supabase
+        .from('propietarios')
+        .select('nombre, email, telefono')
+        .eq('id', propietarioId)
+        .single();
+      propietarioEmail = propietario?.email || '';
+    }
     const paciente = receta.pacientes?.nombre || 'paciente';
     const fecha = new Date(receta.fecha).toLocaleDateString('es-AR');
 
