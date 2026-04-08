@@ -166,6 +166,7 @@ const App = () => {
   const [clinicaNombre, setClinicaNombre] = useState<string>('');
   const [stockModal, setStockModal] = useState<{ sinStock: number; stockBajo: number; total: number } | null>(null);
   const [modoRecuperacion, setModoRecuperacion] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const tema = TEMAS[temaKey];
 
@@ -294,8 +295,8 @@ const App = () => {
     )}
     {!modoRecuperacion && <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: tema.bg, color: tema.text, fontFamily: "'Inter', system-ui, sans-serif" }}>
 
-      {/* SIDEBAR */}
-      <aside style={{ width: '220px', background: '#0f0f0f', padding: '24px 16px', borderRight: '1px solid #1e1e1e', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+      {/* SIDEBAR DESKTOP */}
+      <aside style={{ width: '220px', background: '#0f0f0f', padding: '24px 16px', borderRight: '1px solid #1e1e1e', display: 'flex', flexDirection: 'column', flexShrink: 0 }} className="hidden md:flex">
 
         {/* Logo ValVet */}
         <div style={{ marginBottom: '14px', paddingBottom: '14px', borderBottom: '1px solid #1e1e1e', textAlign: 'center' }}>
@@ -352,11 +353,87 @@ const App = () => {
         </div>
       </aside>
 
+      {/* DRAWER MOBILE */}
+      {drawerOpen && (
+        <>
+          {/* Overlay */}
+          <div
+            onClick={() => setDrawerOpen(false)}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 40 }}
+            className="md:hidden"
+          />
+          {/* Drawer */}
+          <aside style={{ position: 'fixed', top: 0, left: 0, height: '100%', width: '220px', background: '#0f0f0f', padding: '24px 16px', borderRight: '1px solid #1e1e1e', display: 'flex', flexDirection: 'column', zIndex: 50, overflowY: 'auto' }} className="md:hidden">
+
+            {/* Botón cerrar */}
+            <button
+              onClick={() => setDrawerOpen(false)}
+              style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', fontSize: '20px', lineHeight: 1 }}
+            >✕</button>
+
+            {/* Logo ValVet */}
+            <div style={{ marginBottom: '14px', paddingBottom: '14px', borderBottom: '1px solid #1e1e1e', textAlign: 'center' }}>
+              <img src={VALVET_LOGO} alt="ValVet"
+                style={{ width: '170px', objectFit: 'contain', filter: 'invert(1) brightness(0.88)', display: 'inline-block', verticalAlign: 'bottom' }} />
+            </div>
+
+            {/* Usuario */}
+            <div style={{ marginBottom: '16px', padding: '12px 14px', background: '#141414', borderRadius: '8px', border: '1px solid #1e1e1e', textAlign: 'center' }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: rolStyle.bg, border: `1px solid ${rolStyle.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '600', color: rolStyle.color, margin: '0 auto 10px', letterSpacing: '0.04em' }}>
+                {iniciales}
+              </div>
+              <p style={{ margin: '0 0 7px', fontSize: '14px', fontWeight: '600', color: '#c8c8c8', letterSpacing: '0.01em' }}>{usuario.nombre}</p>
+              <span style={{ fontSize: '11px', background: rolStyle.bg, color: rolStyle.color, border: `1px solid ${rolStyle.border}`, padding: '2px 10px', borderRadius: '3px', letterSpacing: '0.08em', textTransform: 'uppercase' as const, fontWeight: '500' }}>{usuario.rol}</span>
+              {clinicaNombre && (
+                <p style={{ margin: '8px 0 0', fontSize: '12px', color: '#888', letterSpacing: '0.04em', borderTop: '1px solid #1e1e1e', paddingTop: '8px' }}>
+                  {clinicaNombre}
+                </p>
+              )}
+            </div>
+
+            {/* Nav agrupada */}
+            <nav style={{ flex: 1, overflowY: 'auto' }}>
+              {NAV_GRUPOS.map(grupo => {
+                const itemsFiltrados = grupo.items.filter(item => item.roles.includes(usuario.rol));
+                if (itemsFiltrados.length === 0) return null;
+                return (
+                <div key={grupo.label} style={{ marginBottom: '20px' }}>
+                  <div style={{ fontSize: '12px', color: '#666', letterSpacing: '0.12em', textTransform: 'uppercase' as const, padding: '0 12px', marginBottom: '8px', fontWeight: '500' }}>{grupo.label}</div>
+                  {itemsFiltrados.map(({ key, label }) => (
+                    <button key={key} onClick={() => { navegarA(key); setDrawerOpen(false); }}
+                      style={{ width: '100%', padding: '10px 12px', border: 'none', borderRadius: '5px', textAlign: 'left', cursor: 'pointer', fontSize: '14px', letterSpacing: '0.02em', marginBottom: '1px', background: vista === key ? '#1a2a1a' : 'transparent', color: vista === key ? '#5a9e5a' : '#aaaaaa', borderLeft: vista === key ? '2px solid #5a9e5a' : '2px solid transparent', fontWeight: vista === key ? '500' : '400' }}
+                    >{label}</button>
+                  ))}
+                </div>
+                );
+              })}
+            </nav>
+
+            {/* Cerrar sesión */}
+            <button onClick={logout}
+              style={{ width: '100%', padding: '10px', background: 'transparent', border: '1px solid #333333', borderRadius: '5px', color: '#888888', cursor: 'pointer', fontSize: '13px', letterSpacing: '0.05em', marginTop: '8px' }}
+            >Cerrar sesión</button>
+
+            {/* Logo Lynx */}
+            <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid #1e1e1e', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
+              <img src={LYNX_LOGO} alt="Lynx" style={{ width: '96px', height: '96px', objectFit: 'contain', opacity: 0.7 }} />
+              <span style={{ fontSize: '9px', color: '#2a2a2a', letterSpacing: '0.14em', textTransform: 'uppercase' as const }}>powered by Lynx</span>
+            </div>
+          </aside>
+        </>
+      )}
+
       {/* MAIN */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* TOPBAR */}
-        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 32px', background: tema.bgCard, borderBottom: `1px solid ${tema.border}` }}>
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', background: tema.bgCard, borderBottom: `1px solid ${tema.border}` }}>
+          {/* Botón hamburguesa — solo mobile */}
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="md:hidden"
+            style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', fontSize: '20px', marginRight: '12px', padding: '4px' }}
+          >☰</button>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
             {breadcrumb.map((b, i) => (
               <span key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
