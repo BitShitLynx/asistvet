@@ -7,6 +7,17 @@ import { VALVET_LOGO, LYNX_LOGO } from './styles/theme';
 import { ToastProvider, useToast } from './components/toast';
 
 const PantallaLogin         = lazy(() => import('./pages/Login'));
+
+// ── Hook para detectar ancho de pantalla ──────────────────────────────────────
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < breakpoint);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < breakpoint);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, [breakpoint]);
+  return isMobile;
+}
 const PantallaInicio        = lazy(() => import('./pages/Inicio'));
 const SeccionPacientes      = lazy(() => import('./pages/Pacientes'));
 const SeccionPropietarios   = lazy(() => import('./pages/Propietarios'));
@@ -167,6 +178,7 @@ const App = () => {
   const [stockModal, setStockModal] = useState<{ sinStock: number; stockBajo: number; total: number } | null>(null);
   const [modoRecuperacion, setModoRecuperacion] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const tema = TEMAS[temaKey];
 
@@ -296,7 +308,7 @@ const App = () => {
     {!modoRecuperacion && <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: tema.bg, color: tema.text, fontFamily: "'Inter', system-ui, sans-serif" }}>
 
       {/* SIDEBAR DESKTOP */}
-      <aside style={{ width: '220px', background: '#0f0f0f', padding: '24px 16px', borderRight: '1px solid #1e1e1e', display: 'flex', flexDirection: 'column', flexShrink: 0 }} className="hidden md:flex">
+      <aside style={{ display: isMobile ? 'none' : 'flex', width: '220px', background: '#0f0f0f', padding: '24px 16px', borderRight: '1px solid #1e1e1e', flexDirection: 'column', flexShrink: 0 }}>
 
         {/* Logo ValVet */}
         <div style={{ marginBottom: '14px', paddingBottom: '14px', borderBottom: '1px solid #1e1e1e', textAlign: 'center' }}>
@@ -360,10 +372,9 @@ const App = () => {
           <div
             onClick={() => setDrawerOpen(false)}
             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 40 }}
-            className="md:hidden"
           />
           {/* Drawer */}
-          <aside style={{ position: 'fixed', top: 0, left: 0, height: '100%', width: '220px', background: '#0f0f0f', padding: '24px 16px', borderRight: '1px solid #1e1e1e', display: 'flex', flexDirection: 'column', zIndex: 50, overflowY: 'auto' }} className="md:hidden">
+          <aside style={{ position: 'fixed', top: 0, left: 0, height: '100%', width: '220px', background: '#0f0f0f', padding: '24px 16px', borderRight: '1px solid #1e1e1e', display: 'flex', flexDirection: 'column', zIndex: 50, overflowY: 'auto' }}>
 
             {/* Botón cerrar */}
             <button
@@ -431,8 +442,7 @@ const App = () => {
           {/* Botón hamburguesa — solo mobile */}
           <button
             onClick={() => setDrawerOpen(true)}
-            className="md:hidden"
-            style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', fontSize: '20px', marginRight: '12px', padding: '4px' }}
+            style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', fontSize: '20px', marginRight: '12px', padding: '4px', display: isMobile ? 'block' : 'none' }}
           >☰</button>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
             {breadcrumb.map((b, i) => (
