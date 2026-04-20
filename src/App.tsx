@@ -124,7 +124,7 @@ const PantallaRecuperacion = ({ onDone }: { onDone: () => void }) => {
     <div style={{ minHeight: '100vh', background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ width: '380px' }}>
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <img src={VALVET_LOGO} alt="ValVet" style={{ width: '200px', objectFit: 'contain', filter: 'invert(1) brightness(0.88)', display: 'inline-block' }} />
+          <img src={VALVET_LOGO} alt="AsistVet" style={{ width: '200px', objectFit: 'contain', filter: 'none', display: 'inline-block' }} />
         </div>
         <div style={{ background: '#141414', border: '1px solid #222', borderRadius: '10px', padding: '32px 28px' }}>
           <p style={{ margin: '0 0 4px', fontSize: '11px', color: '#555', letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>Nueva contraseña</p>
@@ -313,7 +313,7 @@ const App = () => {
         {/* Logo ValVet */}
         <div style={{ marginBottom: '14px', paddingBottom: '14px', borderBottom: '1px solid #1e1e1e', textAlign: 'center' }}>
           <img src={VALVET_LOGO} alt="ValVet"
-            style={{ width: '170px', objectFit: 'contain', filter: 'invert(1) brightness(0.88)', display: 'inline-block', verticalAlign: 'bottom' }} />
+            style={{ width: '170px', objectFit: 'contain', filter: 'none', display: 'inline-block', verticalAlign: 'bottom' }} />
         </div>
 
         {/* Usuario */}
@@ -385,7 +385,7 @@ const App = () => {
             {/* Logo ValVet */}
             <div style={{ marginBottom: '14px', paddingBottom: '14px', borderBottom: '1px solid #1e1e1e', textAlign: 'center' }}>
               <img src={VALVET_LOGO} alt="ValVet"
-                style={{ width: '170px', objectFit: 'contain', filter: 'invert(1) brightness(0.88)', display: 'inline-block', verticalAlign: 'bottom' }} />
+                style={{ width: '170px', objectFit: 'contain', filter: 'none', display: 'inline-block', verticalAlign: 'bottom' }} />
             </div>
 
             {/* Usuario */}

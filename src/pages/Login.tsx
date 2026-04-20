@@ -47,8 +47,8 @@ const PantallaLogin = ({ onLogin }: { onLogin: (u: Usuario) => void }) => {
 
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <img src={VALVET_LOGO} alt="ValVet"
-            style={{ width: '260px', objectFit: 'contain', filter: 'invert(1) brightness(0.88)', display: 'inline-block', verticalAlign: 'bottom' }} />
+          <img src={VALVET_LOGO} alt="AsistVet"
+            style={{ width: '260px', objectFit: 'contain', filter: 'none', display: 'inline-block', verticalAlign: 'bottom' }} />
           <p style={{ margin: '14px 0 0', fontSize: '12px', color: '#666666', letterSpacing: '0.1em', textTransform: 'uppercase' }}>AsistVet · Gestión Veterinaria</p>
         </div>
 
