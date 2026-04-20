@@ -14,6 +14,7 @@ const PantallaInicio = ({ usuario, onNavegar, tema }: { usuario: Usuario; onNave
     { key: 'intervenciones', label: 'Intervenciones', desc: 'Aplicación de drogas' },
     { key: 'cirugias',       label: 'Cirugías',       desc: 'Registro quirúrgico' },
     { key: 'recetas',        label: 'Recetas',         desc: 'Prescripciones' },
+    { key: 'grooming',       label: 'Grooming',        desc: 'Peluquería y estética' },
     { key: 'stock',          label: 'Inventario',     desc: 'Stock e insumos' },
     { key: 'facturacion',    label: 'Facturación',    desc: 'Cobros y pagos' },
     { key: 'gastos',         label: 'Gastos',         desc: 'Egresos operativos' },
