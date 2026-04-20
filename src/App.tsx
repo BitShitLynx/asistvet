@@ -34,6 +34,7 @@ const AdminLynx             = lazy(() => import('./pages/AdminLynx'));
 const SeccionAjustes        = lazy(() => import('./pages/Ajustes'));
 const SeccionGrooming       = lazy(() => import('./pages/Grooming'));
 const SeccionShop           = lazy(() => import('./pages/Shop'));
+const Tutorial              = lazy(() => import('./components/Tutorial'));
 
 // ── Modal de alerta de stock ──────────────────────────────────────────────────
 const StockAlertModal = ({ sinStock, stockBajo, onClose, onVerInventario }: {
@@ -181,6 +182,7 @@ const App = () => {
   const [clinicaNombre, setClinicaNombre] = useState<string>('');
   const [stockModal, setStockModal] = useState<{ sinStock: number; stockBajo: number; total: number } | null>(null);
   const [modoRecuperacion, setModoRecuperacion] = useState(false);
+  const [mostrarTutorial, setMostrarTutorial]   = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const isMobile = useIsMobile();
 
@@ -245,6 +247,7 @@ const App = () => {
   };
 
   const logout = async () => { await supabase.auth.signOut(); localStorage.removeItem('valvet-vista'); setUsuario(null); setVista('inicio'); };
+  const cerrarTutorial = () => { localStorage.setItem(`asistvet-tutorial-${usuario?.id}`, 'true'); setMostrarTutorial(false); };
 
   if (checkingAuth) return (
     <div style={{ minHeight: '100vh', background: TEMAS.dark.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -254,7 +257,12 @@ const App = () => {
 
   if (!usuario) return (
     <Suspense fallback={<div style={{ minHeight: '100vh', background: TEMAS.dark.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p style={{ color: '#555', fontSize: '13px', letterSpacing: '0.06em' }}>Cargando...</p></div>}>
-      <PantallaLogin onLogin={u => { setUsuario(u); navegarA('inicio'); }} />
+      <PantallaLogin onLogin={u => {
+        setUsuario(u);
+        navegarA('inicio');
+        const tutorialVisto = localStorage.getItem(`asistvet-tutorial-${u.id}`);
+        if (!tutorialVisto) setMostrarTutorial(true);
+      }} />
     </Suspense>
   );
 
@@ -356,7 +364,11 @@ const App = () => {
           })}
         </nav>
 
-        {/* Cerrar sesión */}
+        {/* Tutorial + Cerrar sesión */}
+        <button onClick={() => setMostrarTutorial(true)}
+          style={{ width: '100%', padding: '9px', background: 'transparent', border: '1px solid #2a1a4a', borderRadius: '5px', color: '#5B21B6', cursor: 'pointer', fontSize: '12px', letterSpacing: '0.05em', marginBottom: '8px' }}>
+          Ver tutorial
+        </button>
         <button onClick={logout}
           style={{ width: '100%', padding: '10px', background: 'transparent', border: '1px solid #333333', borderRadius: '5px', color: '#888888', cursor: 'pointer', fontSize: '13px', letterSpacing: '0.05em', marginTop: '8px' }}
           onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#cccccc'; (e.currentTarget as HTMLButtonElement).style.borderColor = '#555555'; (e.currentTarget as HTMLButtonElement).style.background = '#1a1a1a'; }}
@@ -426,7 +438,11 @@ const App = () => {
               })}
             </nav>
 
-            {/* Cerrar sesión */}
+            {/* Tutorial + Cerrar sesión */}
+            <button onClick={() => { setMostrarTutorial(true); setDrawerOpen(false); }}
+              style={{ width: '100%', padding: '9px', background: 'transparent', border: '1px solid #2a1a4a', borderRadius: '5px', color: '#5B21B6', cursor: 'pointer', fontSize: '12px', letterSpacing: '0.05em', marginBottom: '8px' }}>
+              Ver tutorial
+            </button>
             <button onClick={logout}
               style={{ width: '100%', padding: '10px', background: 'transparent', border: '1px solid #333333', borderRadius: '5px', color: '#888888', cursor: 'pointer', fontSize: '13px', letterSpacing: '0.05em', marginTop: '8px' }}
             >Cerrar sesión</button>
@@ -494,6 +510,11 @@ const App = () => {
         </main>
       </div>
     </div>}
+    {mostrarTutorial && (
+      <Suspense fallback={null}>
+        <Tutorial onClose={cerrarTutorial} tema={tema} />
+      </Suspense>
+    )}
     </ToastProvider>
   );
 };
