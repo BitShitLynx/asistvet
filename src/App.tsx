@@ -32,6 +32,7 @@ const SeccionReportes       = lazy(() => import('./pages/Reportes'));
 const SeccionUsuarios       = lazy(() => import('./pages/Usuarios'));
 const AdminLynx             = lazy(() => import('./pages/AdminLynx'));
 const SeccionAjustes        = lazy(() => import('./pages/Ajustes'));
+const SeccionGrooming       = lazy(() => import('./pages/Grooming'));
 
 // ── Modal de alerta de stock ──────────────────────────────────────────────────
 const StockAlertModal = ({ sinStock, stockBajo, onClose, onVerInventario }: {
@@ -161,6 +162,7 @@ const PERMISOS: Record<string, string[]> = {
   gastos:         ['admin'],
   reportes:       ['admin'],
   usuarios:       ['admin'],
+  grooming:       ['admin', 'veterinario', 'recepcionista'],
   ajustes:        ['admin', 'veterinario', 'recepcionista'],
   admin_lynx:     ['admin'],
 };
@@ -272,6 +274,7 @@ const App = () => {
         { key: 'cirugias',       label: 'Cirugías',       roles: ['admin', 'veterinario'] },
         { key: 'recetas',        label: 'Recetas',        roles: ['admin', 'veterinario'] },
         { key: 'stock',          label: 'Inventario',     roles: ['admin', 'veterinario'] },
+        { key: 'grooming',       label: 'Grooming',       roles: ['admin', 'veterinario', 'recepcionista'] },
       ],
     },
     {
@@ -476,6 +479,7 @@ const App = () => {
             {vista === 'cirugias'       && PERMISOS.cirugias.includes(usuario.rol)       && <SeccionCirugias       usuario={usuario} tema={tema} />}
             {vista === 'recetas'        && PERMISOS.recetas.includes(usuario.rol)        && <SeccionRecetas        usuario={usuario} tema={tema} />}
             {vista === 'stock'          && PERMISOS.stock.includes(usuario.rol)          && <SeccionInventario     usuario={usuario} tema={tema} />}
+            {vista === 'grooming'       && PERMISOS.grooming.includes(usuario.rol)       && <SeccionGrooming       usuario={usuario} tema={tema} />}
             {vista === 'facturacion'    && PERMISOS.facturacion.includes(usuario.rol)    && <SeccionFacturacion    usuario={usuario} tema={tema} />}
             {vista === 'gastos'         && PERMISOS.gastos.includes(usuario.rol)         && <SeccionGastos         usuario={usuario} tema={tema} />}
             {vista === 'reportes'       && PERMISOS.reportes.includes(usuario.rol)       && <SeccionReportes       usuario={usuario} tema={tema} />}
