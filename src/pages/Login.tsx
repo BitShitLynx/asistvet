@@ -49,7 +49,7 @@ const PantallaLogin = ({ onLogin }: { onLogin: (u: Usuario) => void }) => {
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <img src={VALVET_LOGO} alt="ValVet"
             style={{ width: '260px', objectFit: 'contain', filter: 'invert(1) brightness(0.88)', display: 'inline-block', verticalAlign: 'bottom' }} />
-          <p style={{ margin: '14px 0 0', fontSize: '12px', color: '#666666', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Sistema de Gestión Veterinaria</p>
+          <p style={{ margin: '14px 0 0', fontSize: '12px', color: '#666666', letterSpacing: '0.1em', textTransform: 'uppercase' }}>AsistVet · Gestión Veterinaria</p>
         </div>
 
         {!modoRecuperar ? (
@@ -77,7 +77,7 @@ const PantallaLogin = ({ onLogin }: { onLogin: (u: Usuario) => void }) => {
                 placeholder="••••••••" />
             </div>
             <button onClick={handleLogin} disabled={loading}
-              style={{ width: '100%', padding: '13px', background: loading ? '#1a2a1a' : '#2d5a2d', color: '#7ab87a', border: '1px solid #3a6e3a', borderRadius: '6px', fontWeight: '500', cursor: loading ? 'default' : 'pointer', fontSize: '13px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              style={{ width: '100%', padding: '13px', background: loading ? '#1e1333' : '#5B21B6', color: '#EDE9FE', border: '1px solid #6D28D9', borderRadius: '6px', fontWeight: '500', cursor: loading ? 'default' : 'pointer', fontSize: '13px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
               {loading ? 'Verificando...' : 'Ingresar'}
             </button>
             <button

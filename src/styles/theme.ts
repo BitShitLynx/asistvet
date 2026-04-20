@@ -13,8 +13,8 @@ export const TEMAS = {
     text:       '#d0d0d0',
     textMuted:  '#7a7a7a',
     textLabel:  '#666666',
-    accent:     '#5a9e5a',
-    rowHover:   '#1f1f1f',
+    accent:     '#8B5CF6',
+    rowHover:   '#1e1333',
   },
   light: {
     bg:         '#f5f5f3',
@@ -26,7 +26,7 @@ export const TEMAS = {
     text:       '#1a1a1a',
     textMuted:  '#888888',
     textLabel:  '#666666',
-    accent:     '#3a7a3a',
+    accent:     '#8B5CF6',
     rowHover:   '#eef4ee',
   },
 };
@@ -37,8 +37,8 @@ export const makeS = (t: TemaObj) => ({
   input:      { background: t.bgInput, color: t.text, border: `1px solid ${t.border}`, borderRadius: '6px', padding: '10px 12px', width: '100%', boxSizing: 'border-box', fontSize: '15px' } as React.CSSProperties,
   label:      { fontSize: '12px', color: t.textLabel, marginBottom: '6px', display: 'block', textTransform: 'uppercase' as const, letterSpacing: '0.08em', fontWeight: '500' } as React.CSSProperties,
   card:       { background: t.bgCard, borderRadius: '10px', border: `1px solid ${t.border}`, padding: '22px 24px' } as React.CSSProperties,
-  btnPrimary: { padding: '10px 20px', background: '#2d5a2d', color: '#a8d4a8', border: '1px solid #3a6e3a', borderRadius: '6px', fontWeight: '500', cursor: 'pointer', fontSize: '15px', letterSpacing: '0.03em' } as React.CSSProperties,
-  btnSuccess: { padding: '10px 20px', background: '#1a3a1a', color: '#ffffff', border: '1px solid #2d5a2d', borderRadius: '6px', fontWeight: '500', cursor: 'pointer', fontSize: '15px', letterSpacing: '0.03em' } as React.CSSProperties,
+  btnPrimary: { padding: '10px 20px', background: '#5B21B6', color: '#EDE9FE', border: '1px solid #6D28D9', borderRadius: '6px', fontWeight: '500', cursor: 'pointer', fontSize: '15px', letterSpacing: '0.03em' } as React.CSSProperties,
+  btnSuccess: { padding: '10px 20px', background: '#4C1D95', color: '#DDD6FE', border: '1px solid #5B21B6', borderRadius: '6px', fontWeight: '500', cursor: 'pointer', fontSize: '15px', letterSpacing: '0.03em' } as React.CSSProperties,
   btnGhost:   { padding: '10px 20px', background: 'transparent', color: t.textMuted, border: `1px solid ${t.border}`, borderRadius: '6px', cursor: 'pointer', fontSize: '15px' } as React.CSSProperties,
   btnDanger:  { padding: '6px 12px', background: 'transparent', color: '#c0504a', border: '1px solid #c0504a', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' } as React.CSSProperties,
 });

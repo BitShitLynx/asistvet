@@ -16,7 +16,7 @@ interface ToastContextType {
 
 // ── Colores por tipo ───────────────────────────────────────────────────────────
 const TOAST_ESTILOS: Record<ToastTipo, { bg: string; border: string; color: string; icon: string }> = {
-  success: { bg: '#052e16', border: '#16a34a', color: '#4ade80', icon: '✅' },
+  success: { bg: '#1e1333', border: '#6D28D9', color: '#A78BFA', icon: '✅' },
   error:   { bg: '#450a0a', border: '#dc2626', color: '#f87171', icon: '❌' },
   warning: { bg: '#431407', border: '#d97706', color: '#fbbf24', icon: '⚠️' },
   info:    { bg: '#0c1a2e', border: '#0891b2', color: '#38bdf8', icon: 'ℹ️'  },

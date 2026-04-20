@@ -255,7 +255,7 @@ const App = () => {
   );
 
   const ROL_BADGE: Record<string, { bg: string; color: string; border: string }> = {
-    admin:         { bg: '#1a2a1a', color: '#5a9e5a', border: '#2d5a2d' },
+    admin:         { bg: '#1e1333', color: '#A78BFA', border: '#5B21B6' },
     veterinario:   { bg: '#1a1e2a', color: '#5a7aae', border: '#2d3a6a' },
     recepcionista: { bg: '#2a1a2a', color: '#8a5aae', border: '#5a2d7a' },
   };
@@ -340,7 +340,7 @@ const App = () => {
               <div style={{ fontSize: '12px', color: '#666', letterSpacing: '0.12em', textTransform: 'uppercase' as const, padding: '0 12px', marginBottom: '8px', fontWeight: '500' }}>{grupo.label}</div>
               {itemsFiltrados.map(({ key, label }) => (
                 <button key={key} onClick={() => navegarA(key)}
-                  style={{ width: '100%', padding: '10px 12px', border: 'none', borderRadius: '5px', textAlign: 'left', cursor: 'pointer', fontSize: '14px', letterSpacing: '0.02em', marginBottom: '1px', background: vista === key ? '#1a2a1a' : 'transparent', color: vista === key ? '#5a9e5a' : '#aaaaaa', borderLeft: vista === key ? '2px solid #5a9e5a' : '2px solid transparent', fontWeight: vista === key ? '500' : '400' }}
+                  style={{ width: '100%', padding: '10px 12px', border: 'none', borderRadius: '5px', textAlign: 'left', cursor: 'pointer', fontSize: '14px', letterSpacing: '0.02em', marginBottom: '1px', background: vista === key ? '#1e1333' : 'transparent', color: vista === key ? '#A78BFA' : '#aaaaaa', borderLeft: vista === key ? '2px solid #7C3AED' : '2px solid transparent', fontWeight: vista === key ? '500' : '400' }}
                   onMouseEnter={e => { if (vista !== key) { (e.currentTarget as HTMLButtonElement).style.background = '#181818'; (e.currentTarget as HTMLButtonElement).style.color = '#aaa'; } }}
                   onMouseLeave={e => { if (vista !== key) { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#aaaaaa'; } }}
                 >{label}</button>
@@ -412,7 +412,7 @@ const App = () => {
                   <div style={{ fontSize: '12px', color: '#666', letterSpacing: '0.12em', textTransform: 'uppercase' as const, padding: '0 12px', marginBottom: '8px', fontWeight: '500' }}>{grupo.label}</div>
                   {itemsFiltrados.map(({ key, label }) => (
                     <button key={key} onClick={() => { navegarA(key); setDrawerOpen(false); }}
-                      style={{ width: '100%', padding: '10px 12px', border: 'none', borderRadius: '5px', textAlign: 'left', cursor: 'pointer', fontSize: '14px', letterSpacing: '0.02em', marginBottom: '1px', background: vista === key ? '#1a2a1a' : 'transparent', color: vista === key ? '#5a9e5a' : '#aaaaaa', borderLeft: vista === key ? '2px solid #5a9e5a' : '2px solid transparent', fontWeight: vista === key ? '500' : '400' }}
+                      style={{ width: '100%', padding: '10px 12px', border: 'none', borderRadius: '5px', textAlign: 'left', cursor: 'pointer', fontSize: '14px', letterSpacing: '0.02em', marginBottom: '1px', background: vista === key ? '#1e1333' : 'transparent', color: vista === key ? '#A78BFA' : '#aaaaaa', borderLeft: vista === key ? '2px solid #7C3AED' : '2px solid transparent', fontWeight: vista === key ? '500' : '400' }}
                     >{label}</button>
                   ))}
                 </div>

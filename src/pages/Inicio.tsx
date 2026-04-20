@@ -25,7 +25,7 @@ const PantallaInicio = ({ usuario, onNavegar, tema }: { usuario: Usuario; onNave
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
 
       {/* Banner */}
-      <div style={{ ...S.card, borderLeft: '2px solid #3a6e3a', borderRadius: '8px' }}>
+      <div style={{ ...S.card, borderLeft: '2px solid #7C3AED', borderRadius: '8px' }}>
         <p style={{ margin: '0 0 4px', fontSize: '11px', color: '#888888', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{saludo}</p>
         <h2 style={{ margin: '0 0 6px', color: tema.text, fontSize: '22px', fontWeight: '600', letterSpacing: '0.01em' }}>{usuario.nombre}</h2>
         <p style={{ margin: 0, fontSize: '13px', color: '#888888', letterSpacing: '0.02em' }}>
@@ -53,7 +53,7 @@ const PantallaInicio = ({ usuario, onNavegar, tema }: { usuario: Usuario; onNave
             >
               <p style={{ margin: '0 0 6px', fontSize: '15px', fontWeight: '600', color: tema.text, letterSpacing: '0.01em' }}>{m.label}</p>
               <p style={{ margin: '0 0 14px', fontSize: '13px', color: tema.textMuted, lineHeight: '1.4' }}>{m.desc}</p>
-              <p style={{ margin: 0, fontSize: '12px', color: '#4a7a4a', letterSpacing: '0.04em' }}>Abrir →</p>
+              <p style={{ margin: 0, fontSize: '12px', color: '#7C3AED', letterSpacing: '0.04em' }}>Abrir →</p>
             </div>
           ))}
         </div>
