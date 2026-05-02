@@ -16,6 +16,7 @@ const PantallaInicio = ({ usuario, onNavegar, tema }: { usuario: Usuario; onNave
     { key: 'recetas',        label: 'Recetas',         desc: 'Prescripciones' },
     { key: 'grooming',       label: 'Grooming',        desc: 'Peluquería y estética' },
     { key: 'shop',           label: 'Shop',            desc: 'Punto de venta' },
+    { key: 'delivery',       label: 'Delivery',        desc: 'Pedidos a domicilio' },
     { key: 'stock',          label: 'Inventario',     desc: 'Stock e insumos' },
     { key: 'facturacion',    label: 'Facturación',    desc: 'Cobros y pagos' },
     { key: 'gastos',         label: 'Gastos',         desc: 'Egresos operativos' },
