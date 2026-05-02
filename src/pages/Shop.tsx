@@ -29,12 +29,12 @@ interface Venta {
   total: number;
   medio_pago: string;
   items_count: number;
-  shop_venta_items?: { cantidad: number; precio_unitario: number; shop_productos: { nombre: string } }[];
+  anulada: boolean;
+  shop_venta_items?: { cantidad: number; precio_unitario: number; producto_id: string; shop_productos: { nombre: string } }[];
 }
 
 const MEDIOS_PAGO = ['Efectivo', 'Débito', 'Crédito', 'Transferencia', 'MercadoPago'];
 const CATEGORIAS  = ['Alimento', 'Medicamento', 'Accesorio', 'Higiene', 'Juguete', 'Otro'];
-const ACCENT      = '#8B5CF6';
 
 // ── Tab Punto de venta ────────────────────────────────────────────────────────
 
@@ -105,14 +105,17 @@ const TabPDV = ({ usuario, tema, S }: { usuario: Usuario; tema: TemaObj; S: Retu
     if (e2) { toast('Error al guardar ítems', 'error'); setCobrando(false); return; }
 
     // Descontar stock
+    let stockError = false;
     for (const i of carrito) {
-      await supabase
+      const { error: se } = await supabase
         .from('shop_productos')
         .update({ stock: i.producto.stock - i.cantidad })
         .eq('id', i.producto.id);
+      if (se) stockError = true;
     }
 
-    toast(`Venta registrada — $${total.toLocaleString('es-AR')}`, 'success');
+    if (stockError) toast(`Venta registrada pero hubo errores al actualizar el stock`, 'warning');
+    else toast(`Venta registrada — $${total.toLocaleString('es-AR')}`, 'success');
     setCarrito([]);
     cargarProductos();
     setCobrando(false);
@@ -143,11 +146,11 @@ const TabPDV = ({ usuario, tema, S }: { usuario: Usuario; tema: TemaObj; S: Retu
           {filtrados.map(p => (
             <button key={p.id} onClick={() => agregarAlCarrito(p)}
               style={{ background: tema.bgCard, border: `1px solid ${tema.border}`, borderRadius: '10px', padding: '16px 12px', cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.15s, background 0.15s' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.background = '#1e1333'; }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = tema.accent; e.currentTarget.style.background = '#1e1333'; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = tema.border; e.currentTarget.style.background = tema.bgCard; }}>
               <p style={{ margin: '0 0 4px', fontSize: '13px', fontWeight: '600', color: tema.text, lineHeight: 1.3 }}>{p.nombre}</p>
               <p style={{ margin: '0 0 10px', fontSize: '11px', color: tema.textMuted }}>{p.categoria}</p>
-              <p style={{ margin: '0 0 4px', fontSize: '16px', fontWeight: '700', color: ACCENT }}>${p.precio.toLocaleString('es-AR')}</p>
+              <p style={{ margin: '0 0 4px', fontSize: '16px', fontWeight: '700', color: tema.accent }}>${p.precio.toLocaleString('es-AR')}</p>
               <p style={{ margin: 0, fontSize: '11px', color: p.stock <= 3 ? '#f87171' : tema.textMuted }}>Stock: {p.stock}</p>
             </button>
           ))}
@@ -180,7 +183,7 @@ const TabPDV = ({ usuario, tema, S }: { usuario: Usuario; tema: TemaObj; S: Retu
                       <button onClick={() => cambiarCantidad(i.producto.id, 1)}
                         style={{ width: '24px', height: '24px', background: tema.bgInput, border: `1px solid ${tema.border}`, borderRadius: '4px', color: tema.text, cursor: 'pointer', fontSize: '14px', lineHeight: 1 }}>+</button>
                     </div>
-                    <span style={{ fontSize: '13px', fontWeight: '600', color: ACCENT }}>${(i.producto.precio * i.cantidad).toLocaleString('es-AR')}</span>
+                    <span style={{ fontSize: '13px', fontWeight: '600', color: tema.accent }}>${(i.producto.precio * i.cantidad).toLocaleString('es-AR')}</span>
                   </div>
                 </div>
               ))}
@@ -192,7 +195,7 @@ const TabPDV = ({ usuario, tema, S }: { usuario: Usuario; tema: TemaObj; S: Retu
         <div style={{ padding: '14px 16px', borderTop: `1px solid ${tema.border}`, display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '13px', color: tema.textMuted }}>Total</span>
-            <span style={{ fontSize: '20px', fontWeight: '700', color: ACCENT }}>${total.toLocaleString('es-AR')}</span>
+            <span style={{ fontSize: '20px', fontWeight: '700', color: tema.accent }}>${total.toLocaleString('es-AR')}</span>
           </div>
           <select value={medioPago} onChange={e => setMedioPago(e.target.value)}
             style={{ ...S.input, fontSize: '13px', cursor: 'pointer' }}>
@@ -266,7 +269,8 @@ const TabProductos = ({ usuario, tema, S }: { usuario: Usuario; tema: TemaObj; S
   };
 
   const toggleActivo = async (p: ShopProducto) => {
-    await supabase.from('shop_productos').update({ activo: !p.activo }).eq('id', p.id);
+    const { error } = await supabase.from('shop_productos').update({ activo: !p.activo }).eq('id', p.id);
+    if (error) { toast('Error al cambiar el estado del producto', 'error'); return; }
     cargar();
   };
 
@@ -291,7 +295,7 @@ const TabProductos = ({ usuario, tema, S }: { usuario: Usuario; tema: TemaObj; S
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead style={{ background: tema.bgInput }}>
               <tr>{['Nombre', 'Categoría', 'Precio', 'Stock', 'Estado', 'Acciones'].map(h =>
-                <th key={h} style={{ padding: '11px 16px', textAlign: 'left', color: ACCENT, fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{h}</th>
+                <th key={h} style={{ padding: '11px 16px', textAlign: 'left', color: tema.accent, fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{h}</th>
               )}</tr>
             </thead>
             <tbody>
@@ -304,7 +308,7 @@ const TabProductos = ({ usuario, tema, S }: { usuario: Usuario; tema: TemaObj; S
                     {p.descripcion && <p style={{ margin: 0, fontSize: '12px', color: tema.textMuted }}>{p.descripcion}</p>}
                   </td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: tema.textMuted }}>{p.categoria}</td>
-                  <td style={{ padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: ACCENT }}>${p.precio.toLocaleString('es-AR')}</td>
+                  <td style={{ padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: tema.accent }}>${p.precio.toLocaleString('es-AR')}</td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: p.stock <= 3 ? '#f87171' : p.stock <= 10 ? '#fbbf24' : tema.text, fontWeight: '500' }}>{p.stock}</td>
                   <td style={{ padding: '12px 16px' }}>
                     <button onClick={() => toggleActivo(p)}
@@ -377,10 +381,13 @@ const TabProductos = ({ usuario, tema, S }: { usuario: Usuario; tema: TemaObj; S
 // ── Tab Historial ─────────────────────────────────────────────────────────────
 
 const TabHistorial = ({ usuario, tema, S }: { usuario: Usuario; tema: TemaObj; S: ReturnType<typeof makeS> }) => {
-  const [ventas, setVentas]       = useState<Venta[]>([]);
-  const [loading, setLoading]     = useState(true);
-  const [fecha, setFecha]         = useState(new Date().toISOString().split('T')[0]);
-  const [expandida, setExpandida] = useState<string | null>(null);
+  const { toast } = useToast();
+  const [ventas, setVentas]           = useState<Venta[]>([]);
+  const [loading, setLoading]         = useState(true);
+  const [fecha, setFecha]             = useState(new Date().toISOString().split('T')[0]);
+  const [expandida, setExpandida]     = useState<string | null>(null);
+  const [ventaAnular, setVentaAnular] = useState<Venta | null>(null);
+  const [anulando, setAnulando]       = useState(false);
   const hoy = new Date().toISOString().split('T')[0];
 
   const cargar = useCallback(async () => {
@@ -389,7 +396,7 @@ const TabHistorial = ({ usuario, tema, S }: { usuario: Usuario; tema: TemaObj; S
     const hasta = fecha + 'T23:59:59';
     const { data } = await supabase
       .from('shop_ventas')
-      .select('*, shop_venta_items(cantidad, precio_unitario, shop_productos(nombre))')
+      .select('*, shop_venta_items(cantidad, precio_unitario, producto_id, shop_productos(nombre))')
       .eq('clinica_id', usuario.clinica_id)
       .gte('created_at', desde)
       .lte('created_at', hasta)
@@ -400,7 +407,44 @@ const TabHistorial = ({ usuario, tema, S }: { usuario: Usuario; tema: TemaObj; S
 
   useEffect(() => { cargar(); }, [cargar]);
 
-  const totalDia = ventas.reduce((s, v) => s + v.total, 0);
+  const anular = async () => {
+    if (!ventaAnular) return;
+    setAnulando(true);
+
+    const { error } = await supabase
+      .from('shop_ventas')
+      .update({ anulada: true })
+      .eq('id', ventaAnular.id);
+    if (error) { toast('Error al anular la venta', 'error'); setAnulando(false); return; }
+
+    // Restaurar stock de cada ítem
+    const items = ventaAnular.shop_venta_items || [];
+    let stockError = false;
+    for (const item of items) {
+      if (!item.producto_id) continue;
+      const { data: prod } = await supabase
+        .from('shop_productos')
+        .select('stock')
+        .eq('id', item.producto_id)
+        .single();
+      if (prod) {
+        const { error: se } = await supabase
+          .from('shop_productos')
+          .update({ stock: prod.stock + item.cantidad })
+          .eq('id', item.producto_id);
+        if (se) stockError = true;
+      }
+    }
+
+    if (stockError) toast('Venta anulada pero hubo errores al restaurar el stock', 'warning');
+    else toast('Venta anulada y stock restaurado', 'success');
+    setVentaAnular(null);
+    setAnulando(false);
+    cargar();
+  };
+
+  const ventasValidas  = ventas.filter(v => !v.anulada);
+  const totalDia = ventasValidas.reduce((s, v) => s + v.total, 0);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -412,8 +456,13 @@ const TabHistorial = ({ usuario, tema, S }: { usuario: Usuario; tema: TemaObj; S
         {ventas.length > 0 && (
           <div style={{ textAlign: 'right' }}>
             <span style={{ fontSize: '12px', color: tema.textMuted }}>Total del día: </span>
-            <span style={{ fontSize: '16px', fontWeight: '700', color: ACCENT }}>${totalDia.toLocaleString('es-AR')}</span>
-            <span style={{ fontSize: '12px', color: tema.textMuted, marginLeft: '12px' }}>{ventas.length} venta{ventas.length !== 1 ? 's' : ''}</span>
+            <span style={{ fontSize: '16px', fontWeight: '700', color: tema.accent }}>${totalDia.toLocaleString('es-AR')}</span>
+            <span style={{ fontSize: '12px', color: tema.textMuted, marginLeft: '12px' }}>{ventasValidas.length} venta{ventasValidas.length !== 1 ? 's' : ''}</span>
+            {ventas.length !== ventasValidas.length && (
+              <span style={{ fontSize: '12px', color: '#f87171', marginLeft: '8px' }}>
+                ({ventas.length - ventasValidas.length} anulada{ventas.length - ventasValidas.length !== 1 ? 's' : ''})
+              </span>
+            )}
           </div>
         )}
       </div>
@@ -427,17 +476,18 @@ const TabHistorial = ({ usuario, tema, S }: { usuario: Usuario; tema: TemaObj; S
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead style={{ background: tema.bgInput }}>
               <tr>{['Hora', 'Ítems', 'Medio de pago', 'Total', ''].map((h, i) =>
-                <th key={i} style={{ padding: '11px 16px', textAlign: 'left', color: ACCENT, fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{h}</th>
+                <th key={i} style={{ padding: '11px 16px', textAlign: 'left', color: tema.accent, fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{h}</th>
               )}</tr>
             </thead>
             <tbody>
               {ventas.map(v => {
-                const hora = new Date(v.created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+                const hora  = new Date(v.created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
                 const items = v.shop_venta_items || [];
                 const abierta = expandida === v.id;
                 return (
                   <>
-                    <tr key={v.id} style={{ borderBottom: abierta ? 'none' : `1px solid ${tema.border}` }}
+                    <tr key={v.id}
+                      style={{ borderBottom: abierta ? 'none' : `1px solid ${tema.border}`, opacity: v.anulada ? 0.5 : 1 }}
                       onMouseEnter={e => (e.currentTarget.style.background = tema.rowHover)}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                       <td style={{ padding: '12px 16px', color: tema.textMuted, fontSize: '13px', fontVariantNumeric: 'tabular-nums' }}>{hora}</td>
@@ -445,12 +495,23 @@ const TabHistorial = ({ usuario, tema, S }: { usuario: Usuario; tema: TemaObj; S
                       <td style={{ padding: '12px 16px' }}>
                         <span style={{ fontSize: '12px', padding: '3px 10px', borderRadius: '99px', background: '#1e1333', color: '#A78BFA', border: '1px solid #5B21B6' }}>{v.medio_pago}</span>
                       </td>
-                      <td style={{ padding: '12px 16px', fontWeight: '700', color: ACCENT, fontSize: '14px' }}>${v.total.toLocaleString('es-AR')}</td>
+                      <td style={{ padding: '12px 16px', fontWeight: '700', fontSize: '14px', color: v.anulada ? tema.textMuted : tema.accent, textDecoration: v.anulada ? 'line-through' : 'none' }}>
+                        ${v.total.toLocaleString('es-AR')}
+                        {v.anulada && <span style={{ marginLeft: '8px', fontSize: '11px', background: '#dc2626', color: 'white', padding: '2px 7px', borderRadius: '99px', fontWeight: '500', textDecoration: 'none', display: 'inline-block' }}>Anulada</span>}
+                      </td>
                       <td style={{ padding: '12px 16px' }}>
-                        <button onClick={() => setExpandida(abierta ? null : v.id)}
-                          style={{ fontSize: '12px', padding: '4px 10px', background: 'transparent', color: tema.textMuted, border: `1px solid ${tema.border}`, borderRadius: '5px', cursor: 'pointer' }}>
-                          {abierta ? 'Cerrar ▲' : 'Ver detalle ▼'}
-                        </button>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button onClick={() => setExpandida(abierta ? null : v.id)}
+                            style={{ fontSize: '12px', padding: '4px 10px', background: 'transparent', color: tema.textMuted, border: `1px solid ${tema.border}`, borderRadius: '5px', cursor: 'pointer' }}>
+                            {abierta ? 'Cerrar ▲' : 'Ver ▼'}
+                          </button>
+                          {!v.anulada && (
+                            <button onClick={() => setVentaAnular(v)}
+                              style={{ fontSize: '12px', padding: '4px 10px', background: 'transparent', color: '#f87171', border: '1px solid #f87171', borderRadius: '5px', cursor: 'pointer' }}>
+                              Anular
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                     {abierta && (
@@ -474,6 +535,29 @@ const TabHistorial = ({ usuario, tema, S }: { usuario: Usuario; tema: TemaObj; S
           </table>
         )}
       </div>
+
+      {/* Modal confirmar anulación */}
+      {ventaAnular && (
+        <Modal titulo="Anular venta" onClose={() => setVentaAnular(null)} tema={tema}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <p style={{ margin: 0, color: tema.text, fontSize: '14px' }}>
+              ¿Anulás la venta de <strong style={{ color: tema.accent }}>${ventaAnular.total.toLocaleString('es-AR')}</strong>{' '}
+              ({ventaAnular.medio_pago}) del {new Date(ventaAnular.created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}?
+            </p>
+            <p style={{ margin: 0, color: tema.textMuted, fontSize: '13px' }}>
+              El stock de {(ventaAnular.shop_venta_items || []).length} producto{(ventaAnular.shop_venta_items || []).length !== 1 ? 's' : ''} será restaurado automáticamente.
+            </p>
+            <p style={{ margin: 0, color: '#f87171', fontSize: '13px' }}>Esta acción no se puede deshacer.</p>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button onClick={anular} disabled={anulando}
+                style={{ ...S.btnPrimary, flex: 1, padding: '12px', background: '#dc2626', opacity: anulando ? 0.6 : 1 }}>
+                {anulando ? 'Anulando...' : 'Sí, anular venta'}
+              </button>
+              <button onClick={() => setVentaAnular(null)} style={S.btnGhost}>Cancelar</button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };
@@ -498,7 +582,7 @@ const SeccionShop = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj }) => 
       <div style={{ display: 'flex', gap: '4px', background: tema.bgCard, border: `1px solid ${tema.border}`, borderRadius: '8px', padding: '4px', width: 'fit-content' }}>
         {TABS.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
-            style={{ padding: '8px 20px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: tab === t.key ? '600' : '400', background: tab === t.key ? ACCENT : 'transparent', color: tab === t.key ? '#EDE9FE' : tema.textMuted, transition: 'background 0.15s, color 0.15s' }}>
+            style={{ padding: '8px 20px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: tab === t.key ? '600' : '400', background: tab === t.key ? tema.accent : 'transparent', color: tab === t.key ? '#EDE9FE' : tema.textMuted, transition: 'background 0.15s, color 0.15s' }}>
             {t.label}
           </button>
         ))}

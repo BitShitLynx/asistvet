@@ -30,6 +30,11 @@ interface TurnoGrooming {
   pacientes?: { nombre: string; especie: string; raza: string };
 }
 
+const FORM_VACIO = (hoy: string) => ({
+  paciente_id: '', fecha: hoy, hora: '09:00',
+  servicios: [] as string[], precio_total: '', observaciones: '',
+});
+
 const ESTADO_COLOR: Record<string, { bg: string; color: string; border: string }> = {
   pendiente:  { bg: '#1a1a2a', color: '#A78BFA', border: '#5B21B6' },
   en_curso:   { bg: '#1a1500', color: '#fbbf24', border: '#d97706' },
@@ -42,20 +47,16 @@ const SeccionGrooming = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj })
   const { toast } = useToast();
   const hoy = new Date().toISOString().split('T')[0];
 
-  const [turnos, setTurnos]         = useState<TurnoGrooming[]>([]);
-  const [pacientes, setPacientes]   = useState<any[]>([]);
-  const [loading, setLoading]       = useState(true);
-  const [fechaSel, setFechaSel]     = useState(hoy);
-  const [modalNuevo, setModalNuevo] = useState(false);
+  const [turnos, setTurnos]       = useState<TurnoGrooming[]>([]);
+  const [pacientes, setPacientes] = useState<{ id: string; nombre: string; especie: string; raza: string }[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [fechaSel, setFechaSel]   = useState(hoy);
 
-  const [form, setForm] = useState({
-    paciente_id: '',
-    fecha: hoy,
-    hora: '09:00',
-    servicios: [] as string[],
-    precio_total: '',
-    observaciones: '',
-  });
+  // 'nuevo' | TurnoGrooming (editar) | null (cerrado)
+  const [turnoModal, setTurnoModal]     = useState<TurnoGrooming | 'nuevo' | null>(null);
+  const [turnoEliminar, setTurnoEliminar] = useState<TurnoGrooming | null>(null);
+
+  const [form, setForm] = useState(FORM_VACIO(hoy));
   const [saving, setSaving] = useState(false);
 
   const cargar = useCallback(async () => {
@@ -71,23 +72,41 @@ const SeccionGrooming = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj })
   }, [usuario.clinica_id, fechaSel]);
 
   const cargarPacientes = useCallback(async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('pacientes')
       .select('id, nombre, especie, raza')
       .eq('clinica_id', usuario.clinica_id)
       .order('nombre');
+    if (error) { toast('Error al cargar pacientes', 'error'); return; }
     setPacientes(data || []);
-  }, [usuario.clinica_id]);
+  }, [usuario.clinica_id, toast]);
 
   useEffect(() => { cargar(); }, [cargar]);
   useEffect(() => { cargarPacientes(); }, [cargarPacientes]);
+
+  const abrirNuevo = () => {
+    setForm(FORM_VACIO(fechaSel));
+    setTurnoModal('nuevo');
+  };
+
+  const abrirEditar = (t: TurnoGrooming) => {
+    setForm({
+      paciente_id:   t.paciente_id,
+      fecha:         t.fecha,
+      hora:          t.hora ? t.hora.slice(0, 5) : '09:00',
+      servicios:     [...t.servicios],
+      precio_total:  String(t.precio_total),
+      observaciones: t.observaciones || '',
+    });
+    setTurnoModal(t);
+  };
 
   const toggleServicio = (s: string) => {
     setForm(p => ({
       ...p,
       servicios: p.servicios.includes(s)
         ? p.servicios.filter(x => x !== s)
-        : [...p.servicios, s]
+        : [...p.servicios, s],
     }));
   };
 
@@ -95,36 +114,49 @@ const SeccionGrooming = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj })
     if (!form.paciente_id) { toast('Seleccioná un paciente', 'warning'); return; }
     if (form.servicios.length === 0) { toast('Seleccioná al menos un servicio', 'warning'); return; }
     setSaving(true);
-    const { error } = await supabase.from('grooming_turnos').insert({
-      clinica_id:    usuario.clinica_id,
+
+    const payload = {
       paciente_id:   form.paciente_id,
       fecha:         form.fecha,
       hora:          form.hora,
       servicios:     form.servicios,
       precio_total:  parseFloat(form.precio_total) || 0,
       observaciones: form.observaciones || null,
-      estado:        'pendiente',
-    });
+    };
+
+    const esEdicion = turnoModal !== 'nuevo';
+    const { error } = esEdicion
+      ? await supabase.from('grooming_turnos').update(payload).eq('id', (turnoModal as TurnoGrooming).id)
+      : await supabase.from('grooming_turnos').insert({ ...payload, clinica_id: usuario.clinica_id, estado: 'pendiente' });
+
     if (error) { toast('Error al guardar: ' + error.message, 'error'); setSaving(false); return; }
-    toast('Turno de grooming registrado', 'success');
-    setModalNuevo(false);
-    setForm({ paciente_id: '', fecha: hoy, hora: '09:00', servicios: [], precio_total: '', observaciones: '' });
-    cargar();
+    toast(esEdicion ? 'Turno actualizado' : 'Turno registrado', 'success');
+    setTurnoModal(null);
     setSaving(false);
+    cargar();
   };
 
   const cambiarEstado = async (id: string, estado: string) => {
-    const { error } = await supabase
-      .from('grooming_turnos')
-      .update({ estado })
-      .eq('id', id);
+    const { error } = await supabase.from('grooming_turnos').update({ estado }).eq('id', id);
     if (error) { toast('Error al cambiar estado', 'error'); return; }
     toast('Estado actualizado', 'success');
     cargar();
   };
 
-  const totalDia = turnos.reduce((a, t) => a + t.precio_total, 0);
+  const eliminar = async () => {
+    if (!turnoEliminar) return;
+    setSaving(true);
+    const { error } = await supabase.from('grooming_turnos').delete().eq('id', turnoEliminar.id);
+    if (error) { toast('Error al eliminar: ' + error.message, 'error'); setSaving(false); return; }
+    toast('Turno eliminado', 'success');
+    setTurnoEliminar(null);
+    setSaving(false);
+    cargar();
+  };
+
+  const totalDia   = turnos.reduce((a, t) => a + t.precio_total, 0);
   const finalizados = turnos.filter(t => t.estado === 'finalizado').length;
+  const modoEdicion = turnoModal !== null && turnoModal !== 'nuevo';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -132,10 +164,10 @@ const SeccionGrooming = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj })
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '14px' }}>
         {[
-          { label: 'Turnos hoy',   valor: turnos.length,                                      color: '#A78BFA' },
-          { label: 'Finalizados',  valor: finalizados,                                         color: '#4ade80' },
-          { label: 'Pendientes',   valor: turnos.filter(t => t.estado === 'pendiente').length, color: '#fbbf24' },
-          { label: 'Total del día',valor: `$${totalDia.toLocaleString('es-AR')}`,             color: '#A78BFA' },
+          { label: 'Turnos hoy',    valor: turnos.length,                                      color: '#A78BFA' },
+          { label: 'Finalizados',   valor: finalizados,                                         color: '#4ade80' },
+          { label: 'Pendientes',    valor: turnos.filter(t => t.estado === 'pendiente').length, color: '#fbbf24' },
+          { label: 'Total del día', valor: `$${totalDia.toLocaleString('es-AR')}`,             color: '#A78BFA' },
         ].map(k => (
           <div key={k.label} style={{ ...S.card, textAlign: 'center' }}>
             <p style={{ margin: '0 0 6px', fontSize: '24px', fontWeight: '700', color: k.color }}>{k.valor}</p>
@@ -146,14 +178,11 @@ const SeccionGrooming = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj })
 
       {/* Controles */}
       <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-        <input type="date" value={fechaSel}
-          onChange={e => setFechaSel(e.target.value)}
+        <input type="date" value={fechaSel} onChange={e => setFechaSel(e.target.value)}
           style={{ ...S.input, width: 'auto', colorScheme: 'dark' }} />
-        <button onClick={() => setFechaSel(hoy)}
-          style={{ ...S.btnGhost, padding: '9px 16px' }}>Hoy</button>
+        <button onClick={() => setFechaSel(hoy)} style={{ ...S.btnGhost, padding: '9px 16px' }}>Hoy</button>
         <div style={{ flex: 1 }} />
-        <button onClick={() => setModalNuevo(true)}
-          style={{ ...S.btnPrimary, padding: '10px 20px' }}>
+        <button onClick={abrirNuevo} style={{ ...S.btnPrimary, padding: '10px 20px' }}>
           + Nuevo turno
         </button>
       </div>
@@ -179,6 +208,7 @@ const SeccionGrooming = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj })
             <tbody>
               {turnos.map(t => {
                 const est = ESTADO_COLOR[t.estado] || ESTADO_COLOR.pendiente;
+                const activo = t.estado === 'pendiente' || t.estado === 'en_curso';
                 return (
                   <tr key={t.id} style={{ borderBottom: `1px solid ${tema.border}` }}
                     onMouseEnter={e => (e.currentTarget.style.background = tema.rowHover)}
@@ -206,7 +236,7 @@ const SeccionGrooming = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj })
                       </span>
                     </td>
                     <td style={{ padding: '12px 16px' }}>
-                      <div style={{ display: 'flex', gap: '6px' }}>
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                         {t.estado === 'pendiente' && (
                           <button onClick={() => cambiarEstado(t.id, 'en_curso')}
                             style={{ padding: '4px 10px', fontSize: '11px', background: '#1a1500', color: '#fbbf24', border: '1px solid #d97706', borderRadius: '5px', cursor: 'pointer' }}>
@@ -219,9 +249,19 @@ const SeccionGrooming = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj })
                             Finalizar
                           </button>
                         )}
-                        <button onClick={() => cambiarEstado(t.id, 'cancelado')}
-                          style={{ padding: '4px 10px', fontSize: '11px', background: 'transparent', color: '#f87171', border: '1px solid #dc2626', borderRadius: '5px', cursor: 'pointer' }}>
-                          Cancelar
+                        {activo && (
+                          <button onClick={() => cambiarEstado(t.id, 'cancelado')}
+                            style={{ padding: '4px 10px', fontSize: '11px', background: 'transparent', color: '#f87171', border: '1px solid #dc2626', borderRadius: '5px', cursor: 'pointer' }}>
+                            Cancelar
+                          </button>
+                        )}
+                        <button onClick={() => abrirEditar(t)}
+                          style={{ padding: '4px 8px', fontSize: '11px', background: 'transparent', color: tema.accent, border: `1px solid ${tema.border}`, borderRadius: '5px', cursor: 'pointer' }}>
+                          ✏️
+                        </button>
+                        <button onClick={() => setTurnoEliminar(t)}
+                          style={{ padding: '4px 8px', fontSize: '11px', background: 'transparent', color: '#f87171', border: '1px solid #f87171', borderRadius: '5px', cursor: 'pointer' }}>
+                          🗑
                         </button>
                       </div>
                     </td>
@@ -233,9 +273,13 @@ const SeccionGrooming = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj })
         )}
       </div>
 
-      {/* Modal nuevo turno */}
-      {modalNuevo && (
-        <Modal titulo="Nuevo turno de grooming" onClose={() => setModalNuevo(false)} tema={tema}>
+      {/* Modal crear / editar turno */}
+      {turnoModal !== null && (
+        <Modal
+          titulo={modoEdicion ? 'Editar turno de grooming' : 'Nuevo turno de grooming'}
+          onClose={() => setTurnoModal(null)}
+          tema={tema}
+        >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
               <div style={{ gridColumn: '1/-1' }}>
@@ -293,9 +337,29 @@ const SeccionGrooming = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj })
             <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
               <button onClick={guardar} disabled={saving}
                 style={{ ...S.btnPrimary, flex: 1, padding: '12px', opacity: saving ? 0.6 : 1 }}>
-                {saving ? 'Guardando...' : 'Registrar turno'}
+                {saving ? 'Guardando...' : modoEdicion ? 'Guardar cambios' : 'Registrar turno'}
               </button>
-              <button onClick={() => setModalNuevo(false)} style={S.btnGhost}>Cancelar</button>
+              <button onClick={() => setTurnoModal(null)} style={S.btnGhost}>Cancelar</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Modal confirmar eliminación */}
+      {turnoEliminar && (
+        <Modal titulo="Eliminar turno" onClose={() => setTurnoEliminar(null)} tema={tema}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <p style={{ margin: 0, color: tema.text, fontSize: '14px' }}>
+              ¿Eliminás el turno de <strong>{turnoEliminar.pacientes?.nombre}</strong> del{' '}
+              {new Date(turnoEliminar.fecha + 'T00:00:00').toLocaleDateString('es-AR')} a las {turnoEliminar.hora?.slice(0, 5)}?
+            </p>
+            <p style={{ margin: 0, color: '#f87171', fontSize: '13px' }}>Esta acción no se puede deshacer.</p>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button onClick={eliminar} disabled={saving}
+                style={{ ...S.btnPrimary, flex: 1, padding: '12px', background: '#dc2626', opacity: saving ? 0.6 : 1 }}>
+                {saving ? 'Eliminando...' : 'Sí, eliminar'}
+              </button>
+              <button onClick={() => setTurnoEliminar(null)} style={S.btnGhost}>Cancelar</button>
             </div>
           </div>
         </Modal>

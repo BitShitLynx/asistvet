@@ -3,8 +3,14 @@ import { supabase } from '../supabaseClient';
 import type { Usuario } from '../supabaseClient';
 import { makeS } from '../styles/theme';
 import type { TemaObj } from '../styles/theme';
+import { useToast } from '../components/toast';
 
-interface StockItem { id: string; nombre: string; categoria: string; stock: number; unidad: string; }
+interface StockItem    { id: string; nombre: string; categoria: string; stock: number; unidad: string; }
+interface CobroDato    { monto_pagado: number; medio_pago: string; estado_pago: string; tipos_consulta?: { nombre: string } | null; }
+interface GastoDato    { monto: number; categoria: string; }
+interface TurnoDato    { fecha: string; estado: string; tipos_consulta?: { nombre: string } | null; }
+interface ShopVentaDato    { total: number; medio_pago: string; }
+interface GroomingFinDato  { precio_total: number; }
 
 const fmtPeso = (n: number) => `$${Math.round(n).toLocaleString('es-AR')}`;
 const hoy = () => new Date().toISOString().split('T')[0];
@@ -19,14 +25,17 @@ const SeccionReportes = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj })
   const [fechaHasta, setFechaHasta] = useState(hoy);
   const [loading, setLoading] = useState(true);
 
-  const [cobros, setCobros]     = useState<any[]>([]);
-  const [gastos, setGastos]     = useState<any[]>([]);
-  const [turnos, setTurnos]     = useState<any[]>([]);
-  const [stockBajo, setStockBajo] = useState<StockItem[]>([]);
+  const { toast } = useToast();
+  const [cobros, setCobros]           = useState<CobroDato[]>([]);
+  const [gastos, setGastos]           = useState<GastoDato[]>([]);
+  const [turnos, setTurnos]           = useState<TurnoDato[]>([]);
+  const [stockBajo, setStockBajo]     = useState<StockItem[]>([]);
+  const [shopVentas, setShopVentas]   = useState<ShopVentaDato[]>([]);
+  const [groomingFin, setGroomingFin] = useState<GroomingFinDato[]>([]);
 
   const cargar = useCallback(async () => {
     setLoading(true);
-    const [c, g, t, s] = await Promise.all([
+    const [c, g, t, s, sv, gr] = await Promise.all([
       supabase.from('cobros').select('monto_pagado, medio_pago, estado_pago, fecha_cobro, tipos_consulta(nombre)')
         .eq('clinica_id', usuario.clinica_id)
         .gte('fecha_cobro', fechaDesde + 'T00:00:00')
@@ -41,6 +50,14 @@ const SeccionReportes = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj })
         .eq('clinica_id', usuario.clinica_id)
         .lte('stock_actual', 5)
         .order('stock_actual'),
+      supabase.from('shop_ventas').select('total, medio_pago')
+        .eq('clinica_id', usuario.clinica_id)
+        .gte('created_at', fechaDesde + 'T00:00:00')
+        .lte('created_at', fechaHasta + 'T23:59:59'),
+      supabase.from('grooming_turnos').select('precio_total')
+        .eq('clinica_id', usuario.clinica_id)
+        .eq('estado', 'finalizado')
+        .gte('fecha', fechaDesde).lte('fecha', fechaHasta),
     ]);
     setCobros(c.data || []);
     setGastos(g.data || []);
@@ -49,18 +66,31 @@ const SeccionReportes = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj })
       id: p.id, nombre: p.nombre, categoria: p.categoria || 'Otro',
       stock: Number(p.stock_actual ?? 0), unidad: p.unidad || 'unidad',
     })));
+    setShopVentas(sv.data || []);
+    setGroomingFin(gr.data || []);
+    if (c.error || g.error || t.error || sv.error || gr.error) {
+      toast('Algunos datos no pudieron cargarse', 'warning');
+    }
     setLoading(false);
   }, [usuario.clinica_id, fechaDesde, fechaHasta]);
 
   useEffect(() => { cargar(); }, [cargar]);
 
   // ── Cálculos ────────────────────────────────────────────────────────────────
-  const totalIngresos = cobros.filter(c => c.estado_pago !== 'pendiente').reduce((a, c) => a + (c.monto_pagado || 0), 0);
-  const totalGastos   = gastos.reduce((a, g) => a + (g.monto || 0), 0);
-  const balance       = totalIngresos - totalGastos;
+  const totalConsultas = cobros.filter(c => c.estado_pago !== 'pendiente').reduce((a, c) => a + (c.monto_pagado || 0), 0);
+  const totalShop      = shopVentas.reduce((a, v) => a + (v.total || 0), 0);
+  const totalGrooming  = groomingFin.reduce((a, t) => a + (t.precio_total || 0), 0);
+  const totalIngresos  = totalConsultas + totalShop + totalGrooming;
+  const totalGastos    = gastos.reduce((a, g) => a + (g.monto || 0), 0);
+  const balance        = totalIngresos - totalGastos;
 
-  const ingresosEfectivo     = cobros.filter(c => c.medio_pago === 'efectivo').reduce((a, c) => a + (c.monto_pagado || 0), 0);
-  const ingresosTransferencia = cobros.filter(c => c.medio_pago === 'transferencia').reduce((a, c) => a + (c.monto_pagado || 0), 0);
+  const ingresosEfectivo      = cobros.filter(c => c.medio_pago === 'efectivo').reduce((a, c) => a + (c.monto_pagado || 0), 0)
+    + shopVentas.filter(v => v.medio_pago === 'Efectivo').reduce((a, v) => a + (v.total || 0), 0);
+  const ingresosTransferencia = cobros.filter(c => c.medio_pago === 'transferencia').reduce((a, c) => a + (c.monto_pagado || 0), 0)
+    + shopVentas.filter(v => v.medio_pago === 'Transferencia').reduce((a, v) => a + (v.total || 0), 0);
+  const ingresosDebito        = shopVentas.filter(v => v.medio_pago === 'Débito').reduce((a, v) => a + (v.total || 0), 0);
+  const ingresosCredito       = shopVentas.filter(v => v.medio_pago === 'Crédito').reduce((a, v) => a + (v.total || 0), 0);
+  const ingresosMP            = shopVentas.filter(v => v.medio_pago === 'MercadoPago').reduce((a, v) => a + (v.total || 0), 0);
 
   // Top tipos de consulta
   const conteoTipos: Record<string, number> = {};
@@ -116,7 +146,7 @@ const SeccionReportes = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj })
       {/* Balance principal */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
         {[
-          { label: 'Total ingresos', val: fmtPeso(totalIngresos), color: '#22c55e', sub: `${cobros.filter(c => c.estado_pago !== 'pendiente').length} cobros` },
+          { label: 'Total ingresos', val: fmtPeso(totalIngresos), color: '#22c55e', sub: `consultas + shop + grooming` },
           { label: 'Total gastos',   val: fmtPeso(totalGastos),   color: '#f87171', sub: `${gastos.length} registros` },
           { label: 'Balance neto',   val: fmtPeso(balance),       color: balance >= 0 ? '#22c55e' : '#f87171', sub: balance >= 0 ? '✅ Positivo' : '⚠️ Negativo' },
         ].map(({ label, val, color, sub }) => (
@@ -130,14 +160,33 @@ const SeccionReportes = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj })
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
 
-        {/* Medios de pago */}
+        {/* Ingresos por fuente y medios de pago */}
         <div style={{ ...S.card }}>
-          <h4 style={{ margin: '0 0 16px', color: tema.text, textAlign: 'center' }}>💳 Medios de pago</h4>
+          <h4 style={{ margin: '0 0 16px', color: tema.text, textAlign: 'center' }}>📈 Ingresos por fuente</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {[
+              { label: '🩺 Consultas',  val: totalConsultas, color: '#22c55e' },
+              { label: '🛒 Shop',       val: totalShop,      color: '#8B5CF6' },
+              { label: '✂️ Grooming',   val: totalGrooming,  color: '#A78BFA' },
+            ].map(({ label, val, color }) => (
+              <div key={label}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '13px', color: tema.text }}>{label}</span>
+                  <span style={{ fontSize: '13px', fontWeight: 'bold', color }}>{fmtPeso(val)}</span>
+                </div>
+                <div style={{ background: tema.bgInput, borderRadius: '99px', height: '8px', overflow: 'hidden' }}>
+                  <div style={{ width: barW(val, totalIngresos || 1), height: '100%', background: color, borderRadius: '99px', transition: 'width 0.4s' }} />
+                </div>
+              </div>
+            ))}
+            <p style={{ margin: '8px 0 4px', fontSize: '12px', color: tema.textMuted, textTransform: 'uppercase' }}>Medios de pago</p>
+            {([
               { label: '💵 Efectivo',      val: ingresosEfectivo,      color: '#22c55e' },
               { label: '📱 Transferencia', val: ingresosTransferencia, color: '#38bdf8' },
-            ].map(({ label, val, color }) => (
+              { label: '💳 Débito',        val: ingresosDebito,        color: '#f59e0b' },
+              { label: '💳 Crédito',       val: ingresosCredito,       color: '#ec4899' },
+              { label: '🟦 MercadoPago',   val: ingresosMP,            color: '#06b6d4' },
+            ] as { label: string; val: number; color: string }[]).filter(m => m.val > 0).map(({ label, val, color }) => (
               <div key={label}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                   <span style={{ fontSize: '13px', color: tema.text }}>{label}</span>
@@ -244,7 +293,7 @@ const SeccionReportes = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj })
           { label: 'Total turnos',     val: turnos.length,                                               color: '#22c55e' },
           { label: 'Finalizados',      val: turnos.filter(t => t.estado === 'finalizado').length,        color: '#38bdf8' },
           { label: 'Cancelados',       val: turnos.filter(t => t.estado === 'cancelado').length,         color: '#f87171' },
-          { label: 'Ticket promedio',  val: cobros.length > 0 ? fmtPeso(totalIngresos / cobros.length) : '$0', color: '#a78bfa' },
+          { label: 'Ticket promedio',  val: cobros.length > 0 ? fmtPeso(totalConsultas / cobros.length) : '$0', color: '#a78bfa' },
         ].map(({ label, val, color }) => (
           <div key={label} style={{ ...S.card, textAlign: 'center', borderColor: color + '44' }}>
             <p style={{ margin: 0, fontSize: '22px', fontWeight: 'bold', color }}>{val}</p>

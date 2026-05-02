@@ -20,7 +20,7 @@ const fmtFecha = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateString
 const itemVacio = (): RecetaItem => ({ medicamento: '', dosis: '', frecuencia: '', dias: '', observaciones: '' });
 
 // ── VISTA IMPRESIÓN ────────────────────────────────────────────────────────────
-const VistaImpresion = ({ receta, tema: _tema }: { receta: Receta; clinicaNombre: string; tema: TemaObj }) => {
+const VistaImpresion = ({ receta, tema: _tema }: { receta: Receta; tema: TemaObj }) => {
   const imprimir = () => {
     const ventana = window.open('', '_blank');
     if (!ventana) return;
@@ -260,7 +260,7 @@ const FormReceta = ({ clinicaId, usuario, onSave, onClose, tema }: {
 }) => {
   const S = makeS(tema);
   const { toast } = useToast();
-  const [pacientes, setPacientes] = useState<any[]>([]);
+  const [pacientes, setPacientes] = useState<{ id: string; nombre: string; especie: string; raza?: string }[]>([]);
   const [form, setForm] = useState({
     paciente_id: '', fecha: new Date().toISOString().split('T')[0],
     diagnostico: '', indicaciones: '', matricula: localStorage.getItem(`valvet-matricula-${usuario.id}`) || '',
@@ -294,9 +294,11 @@ const FormReceta = ({ clinicaId, usuario, onSave, onClose, tema }: {
       dosis: it.dosis || null, frecuencia: it.frecuencia || null,
       dias: it.dias ? parseInt(it.dias) : null, observaciones: it.observaciones || null,
     }));
-    if (itemsPayload.length > 0) await supabase.from('receta_items').insert(itemsPayload);
+    if (itemsPayload.length > 0) {
+      const { error: e2 } = await supabase.from('receta_items').insert(itemsPayload);
+      if (e2) { toast('Error al guardar los medicamentos de la receta', 'error'); setSaving(false); return; }
+    }
     toast('Receta guardada correctamente', 'success');
-    console.log('Receta guardada, llamando onSave...');
     onSave(); onClose();
   };
 
@@ -379,10 +381,8 @@ const SeccionRecetas = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj }) 
   const [recetaVer, setRecetaVer] = useState<Receta | null>(null);
 
   const cargar = useCallback(async () => {
-    console.log('Iniciando carga de recetas...');
-    console.log('clinica_id:', usuario.clinica_id);
     setLoading(true);
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('recetas')
       .select(`
         *,
@@ -392,8 +392,6 @@ const SeccionRecetas = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj }) 
       `)
       .eq('clinica_id', usuario.clinica_id)
       .order('fecha', { ascending: false });
-    console.log('Data recibida:', data);
-    console.log('Error:', error);
     setRecetas((data || []) as Receta[]);
     setLoading(false);
   }, [usuario.clinica_id]);
@@ -530,7 +528,7 @@ const SeccionRecetas = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj }) 
       )}
       {recetaVer && (
         <Modal titulo={`🖨️ Receta — ${recetaVer.pacientes?.nombre}`} onClose={() => setRecetaVer(null)} tema={tema}>
-          <VistaImpresion receta={recetaVer} clinicaNombre="ValVet" tema={tema} />
+          <VistaImpresion receta={recetaVer} tema={tema} />
         </Modal>
       )}
     </div>
