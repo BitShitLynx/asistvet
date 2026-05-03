@@ -463,7 +463,7 @@ const SeccionDelivery = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj })
                           </button>
                         )}
                         {p.estado === 'pendiente' && (
-                          <button onClick={() => abrirEditar(p)} style={{ ...S.btnSecondary, padding: '6px 12px', fontSize: '12px' }}>
+                          <button onClick={() => abrirEditar(p)} style={{ ...S.btnGhost, padding: '6px 12px', fontSize: '12px' }}>
                             ✏️ Editar
                           </button>
                         )}
@@ -485,7 +485,7 @@ const SeccionDelivery = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj })
 
       {/* Modal crear/editar pedido */}
       {pedidoModal !== null && (
-        <Modal titulo={modoEdicion ? 'Editar pedido' : 'Nuevo pedido'} onClose={() => setPedidoModal(null)}>
+        <Modal titulo={modoEdicion ? 'Editar pedido' : 'Nuevo pedido'} onClose={() => setPedidoModal(null)} tema={tema}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
             <div>
@@ -558,7 +558,7 @@ const SeccionDelivery = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj })
             </div>
 
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', paddingTop: '4px' }}>
-              <button onClick={() => setPedidoModal(null)} style={{ ...S.btnSecondary }}>Cancelar</button>
+              <button onClick={() => setPedidoModal(null)} style={{ ...S.btnGhost }}>Cancelar</button>
               <button onClick={guardar} disabled={guardando} style={{ ...S.btnPrimary }}>
                 {guardando ? 'Guardando...' : modoEdicion ? 'Guardar cambios' : 'Crear pedido'}
               </button>
@@ -569,7 +569,7 @@ const SeccionDelivery = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj })
 
       {/* Modal cobro al entregar */}
       {cobroModal && (
-        <Modal titulo="Registrar entrega" onClose={() => setCobroModal(null)}>
+        <Modal titulo="Registrar entrega" onClose={() => setCobroModal(null)} tema={tema}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <p style={{ margin: 0, fontSize: '14px', color: tema.text }}>
               Pedido de <strong>{cobroModal.propietarios?.nombre}</strong> por{' '}
@@ -590,7 +590,7 @@ const SeccionDelivery = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj })
               </div>
             </div>
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-              <button onClick={() => setCobroModal(null)} style={{ ...S.btnSecondary }}>Cancelar</button>
+              <button onClick={() => setCobroModal(null)} style={{ ...S.btnGhost }}>Cancelar</button>
               <button onClick={confirmarEntrega} disabled={cobrando} style={{ ...S.btnPrimary }}>
                 {cobrando ? 'Registrando...' : 'Confirmar entrega'}
               </button>
@@ -601,7 +601,7 @@ const SeccionDelivery = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj })
 
       {/* Modal confirmar cancelación */}
       {cancelarModal && (
-        <Modal titulo="Cancelar pedido" onClose={() => setCancelarModal(null)}>
+        <Modal titulo="Cancelar pedido" onClose={() => setCancelarModal(null)} tema={tema}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <p style={{ margin: 0, fontSize: '14px', color: tema.text }}>
               ¿Cancelar el pedido de <strong>{cancelarModal.propietarios?.nombre}</strong>?
@@ -610,7 +610,7 @@ const SeccionDelivery = ({ usuario, tema }: { usuario: Usuario; tema: TemaObj })
               Se restaurará el stock de los productos del pedido.
             </p>
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-              <button onClick={() => setCancelarModal(null)} style={{ ...S.btnSecondary }}>Volver</button>
+              <button onClick={() => setCancelarModal(null)} style={{ ...S.btnGhost }}>Volver</button>
               <button onClick={cancelar} disabled={cancelando} style={{
                 padding: '9px 20px', background: '#1a0a0a', color: '#c06060', border: '1px solid #6a2020',
                 borderRadius: '6px', cursor: cancelando ? 'default' : 'pointer', fontSize: '13px', fontWeight: '500',
